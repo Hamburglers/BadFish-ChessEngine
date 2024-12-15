@@ -1,6 +1,12 @@
 # Prerequisites
 *.d
 
+# Build
+build/
+CMakeFiles/
+CMakeCache.txt
+ChessGame
+
 # Compiled Object files
 *.slo
 *.lo

@@ -17,7 +17,7 @@ public:
         return color;
     }
 
-    virtual bool isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) = 0;
+    virtual bool isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const = 0;
     virtual string getType() const = 0;
 };
 

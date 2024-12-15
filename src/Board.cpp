@@ -1,13 +1,13 @@
-#include "Piece.h"
-#include "Pawn.h"
-#include "Rook.h"
-#include "Knight.h"
-#include "Bishop.h"
-#include "Queen.h"
-#include "King.h"
-#include "Board.h"
 #include <iostream>
 #include <iomanip>
+#include "Bishop.h"
+#include "Board.h"
+#include "King.h"
+#include "Knight.h"
+#include "Pawn.h"
+#include "Piece.h"
+#include "Queen.h"
+#include "Rook.h"
 
 Board::Board() {
     board = vector<vector<Piece*>>(8, vector<Piece*>(8, nullptr));
