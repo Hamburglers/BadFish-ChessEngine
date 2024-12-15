@@ -14,28 +14,28 @@ public:
     bool isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) override {
         int direction = (color == 'W') ? -1 : 1;
 
-        // first move can be 1 or 2
-        if (!hasMoved && startY == endY && 
-            (endX == startX + direction || endX == startX + 2 * direction) &&
-            board[endX][endY] == nullptr) {
-            hasMoved = true;
-            return true;
-        }
-
         // standard forward move
         if (startY == endY && endX == startX + direction && board[endX][endY] == nullptr) {
             hasMoved = true;
             return true;
         }
 
-        // capture diagonally
+        // initial double move
+        if (!hasMoved && startY == endY && 
+            endX == startX + 2 * direction && 
+            board[startX + direction][endY] == nullptr && 
+            board[endX][endY] == nullptr) {
+            hasMoved = true;
+            return true;
+        }
+
+        // diagonal capture
         if (endX == startX + direction && (endY == startY - 1 || endY == startY + 1) &&
             board[endX][endY] != nullptr && board[endX][endY]->getColor() != color) {
             return true;
         }
 
-        // TODO: en passant
-
+        // TODO: En passant and promotion logic
         return false;
     }
 };

@@ -1,6 +1,10 @@
 #include "Piece.h"
 #include "Pawn.h"
 #include "Rook.h"
+#include "Knight.h"
+#include "Bishop.h"
+#include "Queen.h"
+#include "King.h"
 #include "Board.h"
 #include <iostream>
 #include <iomanip>
@@ -67,31 +71,62 @@ bool Board::isValidMove(int startX, int startY, int endX, int endY) {
         && endX >= 0 && endX < 8 && endY >= 0 && endY < 8;
 }
 
-bool Board::isPiecePinned(int startX, int startY, char currentPlayer) {
-    // remove the piece and see if king is in check
-    auto [x, y] = currentPlayer == 'W' ? getWhiteKing() : getBlackKing();
-    // TODO: run king's in check function
+tuple<int, int> Board::getWhiteKing() {
+    return whiteKing;
 }
+
+tuple<int, int> Board::getBlackKing() {
+    return blackKing;
+}
+
+bool Board::isPiecePinned(int startX, int startY, char currentPlayer) {
+    auto [kingX, kingY] = (currentPlayer == 'W') ? getWhiteKing() : getBlackKing();
+
+    Piece* kingPiece = board[kingX][kingY];
+    if (kingPiece == nullptr || kingPiece->getType() != "King") {
+        throw runtime_error("King not found on the board!");
+    }
+    Piece* temp = board[startX][startY];
+    board[startX][startY] = nullptr;
+    bool result = static_cast<King*>(kingPiece)->isPositionCheck(kingX, kingY, board);
+    board[startX][startY] = temp;
+
+    return result;
+}
+
 
 bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPlayer) {
     if (!isValidMove(startX, startY, endX, endY)) {
-        std::cout << "Outside of grid bounds!" << std::endl; 
+        // std::cout << "Outside of grid bounds!" << std::endl; 
         return false;
     }
     if (board[startX][startY] == nullptr || board[startX][startY]->getColor() != currentPlayer) {
-        std::cout << "Invalid piece selection!" << std::endl;
+        // std::cout << "Invalid piece selection!" << std::endl;
+        return false;
+    }
+    if (board[endX][endY] != nullptr && board[endX][endY]->getColor() == currentPlayer) {
+        // std::cout << "Cannot capture own piece!" << std::endl;
         return false;
     }
     if (isPiecePinned(startX, startY, currentPlayer)) {
-        std::cout << "Piece is pinned!" << std::endl;
+        // std::cout << "Piece is pinned!" << std::endl;
+        return false;
     }
     if (!board[startX][startY]->isValidPieceMove(startX, startY, endX, endY, board)) {
-        std::cout << "Invalid move!" << std::endl;
+        // std::cout << "Invalid move!" << std::endl;
         return false;
     }
 
     delete board[endX][endY];
     board[endX][endY] = board[startX][startY];
     board[startX][startY] = nullptr;
+    // update position of king
+    if (board[startX][startY]->getType() == "King") {
+        if (board[startX][startY]->getColor() == 'W') {
+            whiteKing = std::make_tuple(endX, endY);
+        } else {
+            blackKing = std::make_tuple(endX, endY);
+        }
+    }
     return true;
 }
