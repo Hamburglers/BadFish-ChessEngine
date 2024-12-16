@@ -51,6 +51,8 @@ void Board::initialise() {
 }
 
 void Board::display() {
+    // clear terminal so looks nice
+    std::cout << "\033[2J\033[H";
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
             if (board[i][j] == nullptr) {
@@ -58,7 +60,7 @@ void Board::display() {
             } else {
                 string type = board[i][j]->getType();
                 char pieceChar = type[0]; // First letter of the type
-                std::cout << (board[i][j]->getColor() == 'W' ? pieceChar : tolower(pieceChar)) << " ";
+                std::cout << (board[i][j]->getColor() == 'W' ? pieceChar : static_cast<char>(tolower(pieceChar))) << " ";
             }
         }
         std::cout << std::endl;
@@ -66,7 +68,7 @@ void Board::display() {
 }
 
 bool Board::isValidMove(int startX, int startY, int endX, int endY) {
-    return (startX != endX && startY != endY) 
+    return (startX != endX || startY != endY) 
         && startX >= 0 && startX < 8 && startY >= 0 && startY < 8
         && endX >= 0 && endX < 8 && endY >= 0 && endY < 8;
 }
@@ -97,29 +99,26 @@ bool Board::isPiecePinned(int startX, int startY, char currentPlayer) {
 
 bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPlayer) {
     if (!isValidMove(startX, startY, endX, endY)) {
-        // std::cout << "Outside of grid bounds!" << std::endl; 
+        std::cout << "Outside of grid bounds!" << std::endl; 
         return false;
     }
     if (board[startX][startY] == nullptr || board[startX][startY]->getColor() != currentPlayer) {
-        // std::cout << "Invalid piece selection!" << std::endl;
+        std::cout << "Invalid piece selection!" << std::endl;
         return false;
     }
     if (board[endX][endY] != nullptr && board[endX][endY]->getColor() == currentPlayer) {
-        // std::cout << "Cannot capture own piece!" << std::endl;
+        std::cout << "Cannot capture own piece!" << std::endl;
         return false;
     }
     if (isPiecePinned(startX, startY, currentPlayer)) {
-        // std::cout << "Piece is pinned!" << std::endl;
+        std::cout << "Piece is pinned!" << std::endl;
         return false;
     }
     if (!board[startX][startY]->isValidPieceMove(startX, startY, endX, endY, board)) {
-        // std::cout << "Invalid move!" << std::endl;
+        std::cout << "Invalid move!" << std::endl;
         return false;
     }
 
-    delete board[endX][endY];
-    board[endX][endY] = board[startX][startY];
-    board[startX][startY] = nullptr;
     // update position of king
     if (board[startX][startY]->getType() == "King") {
         if (board[startX][startY]->getColor() == 'W') {
@@ -128,5 +127,9 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
             blackKing = std::make_tuple(endX, endY);
         }
     }
+
+    delete board[endX][endY];
+    board[endX][endY] = board[startX][startY];
+    board[startX][startY] = nullptr;
     return true;
 }

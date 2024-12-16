@@ -16,8 +16,6 @@ int main() {
         if (board.movePiece(startX, startY, endX, endY, currentPlayer)) {
             board.display();
             currentPlayer = (currentPlayer == 'W' ? 'B' : 'W');
-        } else {
-            std::cout << "Invalid move! Try again." << std::endl;
         }
     }
 
