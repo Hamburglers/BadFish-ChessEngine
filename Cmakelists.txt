@@ -5,6 +5,9 @@ project(ChessGame)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Locate SFML
+find_package(SFML 2.5 COMPONENTS system window graphics REQUIRED)
+
 # Include directories
 include_directories(include)
 
@@ -13,3 +16,6 @@ file(GLOB SOURCES "src/*.cpp")
 
 # Add executable
 add_executable(ChessGame ${SOURCES})
+
+# Link SFML libraries
+target_link_libraries(ChessGame sfml-system sfml-window sfml-graphics)

@@ -133,3 +133,18 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
     board[startX][startY] = nullptr;
     return true;
 }
+
+Piece* Board::getPieceAt(int row, int col) const {
+    if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+        return board[row][col];
+    }
+    return nullptr;
+}
+
+char Board::getPieceColor(int row, int col) const {
+    Piece* piece = getPieceAt(row, col);
+    if (piece) {
+        return piece->getColor();
+    }
+    return ' ';
+}
