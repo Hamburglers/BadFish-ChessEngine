@@ -13,8 +13,8 @@ private:
     std::tuple<int, int> whiteKing = {7, 4};
     std::tuple<int, int> getBlackKing();
     std::tuple<int, int> getWhiteKing();
-    bool isValidMove(int startX, int startY, int endX, int endY);
-    bool isPiecePinned(int startX, int startY, char currentPlayer);
+    bool isWithinBoard(int startX, int startY, int endX, int endY);
+    bool isLegalMove(int startX, int startY, int endX, int endY);
 public:
     Board();
     ~Board();
@@ -23,6 +23,7 @@ public:
     void initialise();
     void display();
     bool movePiece(int startX, int startY, int endX, int endY, char currentPlayer);
+    std::vector<std::pair<int, int>> getLegalMoves(int startX, int startY, char currentPlayer);
 };
 
 #endif

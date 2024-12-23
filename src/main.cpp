@@ -17,9 +17,8 @@ int main() {
 
     sf::Sprite pieceSprite(piecesTexture);
     const int squareSize = 100;
-    pieceSprite.setScale(squareSize / 427.0f, squareSize / 427.0f); // Adjust scale for the board
+    pieceSprite.setScale(squareSize / 427.0f, squareSize / 427.0f);
 
-    // Define piece mappings (sprite coordinates)
     std::unordered_map<std::string, sf::IntRect> pieceMap = {
         {"KingW", sf::IntRect(0 * 427, 0, 427, 427)},
         {"QueenW", sf::IntRect(1 * 427, 0, 427, 427)},
@@ -37,6 +36,7 @@ int main() {
 
     char currentPlayer = 'W';
     int selectedX = -1, selectedY = -1;
+    std::vector<std::pair<int, int>> legalMoves;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -50,23 +50,35 @@ int main() {
                     int y = event.mouseButton.y / squareSize;
 
                     if (selectedX == -1 && selectedY == -1) {
+                        // Selecting a piece
                         if (board.getPieceAt(y, x) && board.getPieceColor(y, x) == currentPlayer) {
                             selectedX = x;
                             selectedY = y;
+                            legalMoves = board.getLegalMoves(y, x, currentPlayer); // Calculate legal moves
                         }
                     } else {
-                        if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
-                            currentPlayer = (currentPlayer == 'W' ? 'B' : 'W');
+                        // Moving a piece
+                        auto moveIt = std::find(legalMoves.begin(), legalMoves.end(), std::make_pair(y, x));
+                        if (moveIt != legalMoves.end()) {
+                            // Move the piece only if the clicked square is a legal move
+                            if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
+                                currentPlayer = (currentPlayer == 'W' ? 'B' : 'W');
+                            }
                         }
+                        // Clear selection after moving (or failing to move)
                         selectedX = selectedY = -1;
+                        legalMoves.clear();
                     }
                 }
             }
         }
 
         window.clear();
-        sf::Color cream(240, 217, 181); // Light cream
-        sf::Color brown(181, 136, 99);  // Soft brown
+        sf::Color cream(240, 217, 181);
+        sf::Color brown(181, 136, 99);
+        sf::Color highlight(50, 205, 50, 128); // Semi-transparent green
+
+        // Render board
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 sf::RectangleShape square(sf::Vector2f(squareSize, squareSize));
@@ -85,6 +97,15 @@ int main() {
                 }
             }
         }
+
+        // Highlight legal moves
+        for (auto& move : legalMoves) {
+            sf::RectangleShape highlightSquare(sf::Vector2f(squareSize, squareSize));
+            highlightSquare.setPosition(move.second * squareSize, move.first * squareSize);
+            highlightSquare.setFillColor(highlight);
+            window.draw(highlightSquare);
+        }
+
         window.display();
     }
 

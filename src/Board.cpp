@@ -67,7 +67,7 @@ void Board::display() {
     }
 }
 
-bool Board::isValidMove(int startX, int startY, int endX, int endY) {
+bool Board::isWithinBoard(int startX, int startY, int endX, int endY) {
     return (startX != endX || startY != endY) 
         && startX >= 0 && startX < 8 && startY >= 0 && startY < 8
         && endX >= 0 && endX < 8 && endY >= 0 && endY < 8;
@@ -81,24 +81,57 @@ tuple<int, int> Board::getBlackKing() {
     return blackKing;
 }
 
-bool Board::isPiecePinned(int startX, int startY, char currentPlayer) {
-    auto [kingX, kingY] = (currentPlayer == 'W') ? getWhiteKing() : getBlackKing();
+bool Board::isLegalMove(int startX, int startY, int endX, int endY) {
+    // Backup the current state
+    Piece* movingPiece = board[startX][startY];
+    Piece* capturedPiece = board[endX][endY];
 
-    Piece* kingPiece = board[kingX][kingY];
-    if (kingPiece == nullptr || kingPiece->getType() != "King") {
-        throw runtime_error("King not found on the board!");
-    }
-    Piece* temp = board[startX][startY];
+    // Make the move temporarily
+    char currentPlayer = board[startX][startY]->getColor();
+    board[endX][endY] = movingPiece;
     board[startX][startY] = nullptr;
-    bool result = static_cast<King*>(kingPiece)->isPositionCheck(kingX, kingY, board);
-    board[startX][startY] = temp;
 
-    return result;
+    // Update king position if the moved piece is a king
+    if (movingPiece->getType() == "King") {
+        if (currentPlayer == 'W') {
+            whiteKing = {endX, endY};
+        } else {
+            blackKing = {endX, endY};
+        }
+    }
+
+    // Check if the current player's king is in check
+    bool isInCheck = false;
+    auto [kingX, kingY] = (currentPlayer == 'W') ? whiteKing : blackKing;
+    for (int i = 0; i < 8 && !isInCheck; i++) {
+        for (int j = 0; j < 8 && !isInCheck; j++) {
+            if (board[i][j] && board[i][j]->getColor() != currentPlayer) {
+                // Check if the opponent piece can attack the king
+                if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board)) {
+                    isInCheck = true;
+                }
+            }
+        }
+    }
+    // Undo the move to restore the original board state
+    board[startX][startY] = movingPiece;
+    board[endX][endY] = capturedPiece;
+
+    // Restore king's position if it was moved
+    if (movingPiece->getType() == "King") {
+        if (currentPlayer == 'W') {
+            whiteKing = {startX, startY};
+        } else {
+            blackKing = {startX, startY};
+        }
+    }
+
+    return !isInCheck;
 }
 
 
 bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPlayer) {
-    if (!isValidMove(startX, startY, endX, endY)) {
+    if (!isWithinBoard(startX, startY, endX, endY)) {
         std::cout << "Outside of grid bounds!" << std::endl; 
         return false;
     }
@@ -110,12 +143,13 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         std::cout << "Cannot capture own piece!" << std::endl;
         return false;
     }
-    if (isPiecePinned(startX, startY, currentPlayer)) {
-        std::cout << "Piece is pinned!" << std::endl;
-        return false;
-    }
     if (!board[startX][startY]->isValidPieceMove(startX, startY, endX, endY, board)) {
         std::cout << "Invalid move!" << std::endl;
+        return false;
+    }
+
+    if (!isLegalMove(startX, startY, endX, endY)) {
+        std::cout << "Not a legal move!" << std::endl;
         return false;
     }
 
@@ -147,4 +181,21 @@ char Board::getPieceColor(int row, int col) const {
         return piece->getColor();
     }
     return ' ';
+}
+
+std::vector<std::pair<int, int>> Board::getLegalMoves(int startX, int startY, char currentPlayer) {
+    std::vector<std::pair<int, int>> legalMoves;
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            if (i == startX and j == startY) {
+                continue;
+            }
+            std::cout << i << " " << j << std::endl;
+            if (board[i][j]->isValidPieceMove(startX, startY, i, j, board) && isLegalMove(startX, startY, i, j)) {
+                // Check legality and revert the move
+                legalMoves.emplace_back(i, j);
+            }
+        }
+    }
+    return legalMoves;
 }
