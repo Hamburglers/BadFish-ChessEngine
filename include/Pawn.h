@@ -5,13 +5,15 @@
 
 class Pawn : public Piece {
 private:
-    mutable bool hasMoved;
+    bool hasMoved = false;
 public:
     Pawn(char color);
-
+    
     string getType() const override;
 
     bool isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const override;
+
+    void makeMove() override;
 };
 
 #endif

@@ -165,6 +165,7 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
     delete board[endX][endY];
     board[endX][endY] = board[startX][startY];
     board[startX][startY] = nullptr;
+    board[endX][endY]->makeMove();
     return true;
 }
 
@@ -190,8 +191,7 @@ std::vector<std::pair<int, int>> Board::getLegalMoves(int startX, int startY, ch
             if (i == startX and j == startY) {
                 continue;
             }
-            std::cout << i << " " << j << std::endl;
-            if (board[i][j]->isValidPieceMove(startX, startY, i, j, board) && isLegalMove(startX, startY, i, j)) {
+            if (board[startX][startY]->isValidPieceMove(startX, startY, i, j, board) && isLegalMove(startX, startY, i, j)) {
                 // Check legality and revert the move
                 legalMoves.emplace_back(i, j);
             }

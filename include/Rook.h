@@ -5,7 +5,7 @@
 
 class Rook : public Piece {
 private:
-    bool hasMoved;
+    bool hasMoved = false;
 public:
     Rook(char color);
 
@@ -14,6 +14,8 @@ public:
     bool canCastle() const;
 
     bool isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const override;
+
+    void makeMove() override;
 };
 
 #endif

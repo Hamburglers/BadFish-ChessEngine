@@ -6,6 +6,10 @@ string Rook::getType() const {
     return "Rook";
 }
 
+void Rook::makeMove() {
+    hasMoved = true;
+}
+
 bool Rook::canCastle() const {
     return !hasMoved;
 }
