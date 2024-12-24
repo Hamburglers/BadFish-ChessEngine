@@ -89,9 +89,6 @@ tuple<int, int> Board::getBlackKing() {
 }
 
 bool Board::isLegalMove(int startX, int startY, int endX, int endY) {
-    if (board[endX][endY] == nullptr) {
-        return true;
-    }
     // Backup the current state
     Piece* movingPiece = board[startX][startY];
     Piece* capturedPiece = board[endX][endY];

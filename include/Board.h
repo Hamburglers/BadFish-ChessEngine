@@ -10,6 +10,8 @@ class Board {
 private:
     vector<vector<Piece*>> board;
     std::tuple<int, int> blackKing = {0, 4};
+    bool isBlackInCheck = false;
+    bool isWhiteInCheck = false;
     std::tuple<int, int> whiteKing = {7, 4};
     std::tuple<int, int> getBlackKing();
     std::tuple<int, int> getWhiteKing();

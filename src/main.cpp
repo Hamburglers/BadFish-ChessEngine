@@ -8,7 +8,7 @@ int main() {
     Board board;
     board.initialise();
 
-    sf::RenderWindow window(sf::VideoMode(800, 800), "Chess");
+    sf::RenderWindow window(sf::VideoMode(1000, 1000), "Chess");
     sf::Texture piecesTexture;
     if (!piecesTexture.loadFromFile("Chess_Pieces_Sprite.svg.png")) {
         std::cerr << "Error loading Chess_Pieces_Sprite.svg.png" << std::endl;
