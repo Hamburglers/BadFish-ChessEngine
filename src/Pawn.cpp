@@ -30,6 +30,7 @@ bool Pawn::isValidPieceMove(int startX, int startY, int endX, int endY, const ve
         return true;
     }
 
-    // TODO: En passant and promotion logic
+    // enpassant
+    
     return false;
 }

@@ -227,9 +227,20 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         }
     }
     delete board[endX][endY];
-    board[endX][endY] = board[startX][startY];
-    board[endX][endY]->makeMove();
-    board[startX][startY] = nullptr;
+    // promotion for pawn on 0th, 7th rank
+    if (board[startX][startY]->getType() == "Pawn" && endX == 0 && currentPlayer == 'W') {
+        delete board[startX][startY];
+        board[startX][startY] = nullptr;
+        board[endX][endY] = new Queen('W');
+    } else if (board[startX][startY]->getType() == "Pawn" && endX == 7 && currentPlayer == 'B') {
+        delete board[startX][startY];
+        board[startX][startY] = nullptr;
+        board[endX][endY] = new Queen('B');
+    } else {
+        board[endX][endY] = board[startX][startY];
+        board[endX][endY]->makeMove();
+        board[startX][startY] = nullptr;
+    }
     // if (board[startX][startY]) { // Check if the pointer is not null
     //     std::cout << "Start position: " << typeid(*board[startX][startY]).name() << std::endl;
     //     std::cout << board[startX][startY]->getType() << std::endl;
