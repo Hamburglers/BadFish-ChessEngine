@@ -35,6 +35,10 @@ public:
     bool isValidPieceMove(int startX, int startY, int endX, int endY, const std::vector<std::vector<Piece*>>& board) const override;
 
     void makeMove() override;
+
+    bool checkPseudoCastle(int endX, int endY, const std::vector<std::vector<Piece*>>& board) const;
+
+    pair<int, int> getRookPosition(int endX, int endY, const vector<vector<Piece*>>& board) const;
 };
 
 #endif

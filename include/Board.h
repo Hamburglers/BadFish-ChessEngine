@@ -16,7 +16,7 @@ private:
     std::tuple<int, int> getBlackKing();
     std::tuple<int, int> getWhiteKing();
     bool isWithinBoard(int startX, int startY, int endX, int endY);
-    bool isLegalMove(int startX, int startY, int endX, int endY);
+    bool isLegalMove(int startX, int startY, int endX, int endY, bool flag);
 public:
     Board();
     ~Board();

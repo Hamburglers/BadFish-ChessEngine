@@ -88,10 +88,34 @@ tuple<int, int> Board::getBlackKing() {
     return blackKing;
 }
 
-bool Board::isLegalMove(int startX, int startY, int endX, int endY) {
+bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag=false) {
     // Backup the current state
     Piece* movingPiece = board[startX][startY];
     Piece* capturedPiece = board[endX][endY];
+
+    // castling logic, recursively calls twice
+    if (!flag && movingPiece->getType() == "King") {
+        King* kingPiece = static_cast<King*>(movingPiece);
+        // if both king and rook have not moved
+        if (kingPiece->checkPseudoCastle(endX, endY, board)) {
+            int dx = endX - startX;
+            int dy = endY - startY;
+            // castling
+            if (dx == 0 && abs(dy) == 2) {
+                if (dy > 0) {
+                    return board[startX][startY+1] == nullptr &&
+                        board[startX][startY+2] == nullptr &&
+                        isLegalMove(startX, startY, endX, startY + 1, true) &&
+                        isLegalMove(startX, startY, endX, endY, true);
+                } else {
+                    return board[startX][startY-1] == nullptr &&
+                        board[startX][startY-2] == nullptr &&
+                        isLegalMove(startX, startY, endX, endY - 1, true) &&
+                        isLegalMove(startX, startY, endX, endY, true);
+                }
+            }
+        }
+    }
 
     // Make the move temporarily
     char currentPlayer = board[startX][startY]->getColor();
@@ -132,7 +156,6 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY) {
             blackKing = {startX, startY};
         }
     }
-
     return !isInCheck;
 }
 
@@ -146,25 +169,51 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
     //     std::cout << "End position: " << typeid(*board[endX][endY]).name() << std::endl;
     //     std::cout << board[endX][endY]->getType() << std::endl;
     // }
+
+    // check if even within bounds
     if (!isWithinBoard(startX, startY, endX, endY)) {
         std::cout << "Outside of grid bounds!" << std::endl; 
         return false;
     }
+    // check that piece moved is not empty or other players
     if (board[startX][startY] == nullptr || board[startX][startY]->getColor() != currentPlayer) {
         std::cout << "Invalid piece selection!" << std::endl;
         return false;
     }
+    // check if captured piece is either nothing, or the other player
     if (board[endX][endY] != nullptr && board[endX][endY]->getColor() == currentPlayer) {
         std::cout << "Cannot capture own piece!" << std::endl;
         return false;
     }
+    // check if piece selected can move there (using its own overriden method)
     if (!board[startX][startY]->isValidPieceMove(startX, startY, endX, endY, board)) {
         std::cout << "Invalid move!" << std::endl;
         return false;
     }
+    // now that the move is pseudolegal, check if it is actually legal
+    // i.e. that it doesnt put king in check
     if (!isLegalMove(startX, startY, endX, endY)) {
         std::cout << "Not a legal move!" << std::endl;
         return false;
+    }
+    // check if it was castle, then update rook as well
+    if (board[startX][startY]->getType() == "King") {
+        int dx = endX - startX;
+        int dy = endY - startY;
+        // confirmed if king moved two spots (and was a legal move)
+        if (dx == 0 && abs(dy) == 2) {
+            King* king = static_cast<King*>(board[startX][startY]);
+            auto [rookX, rookY] = king->getRookPosition(endX, endY, board);
+            // kingside castle
+            if (dy > 0) {
+                board[rookX][rookY-2] = board[rookX][rookY];
+                board[rookX][rookY] = nullptr;
+            // queenside castle
+            } else {
+                board[rookX][rookY+3] = board[rookX][rookY];
+                board[rookX][rookY] = nullptr;
+            }
+        }
     }
 
     // update position of king
@@ -215,6 +264,7 @@ std::vector<std::pair<int, int>> Board::getLegalMoves(int startX, int startY, ch
             }
             if (board[startX][startY]->isValidPieceMove(startX, startY, i, j, board) && isLegalMove(startX, startY, i, j)) {
                 // Check legality and revert the move
+                std::cout << startX << " " << startY << "->" << i << " " << j << std::endl;
                 legalMoves.emplace_back(i, j);
             }
         }
