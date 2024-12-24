@@ -103,12 +103,14 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag=fa
             // castling
             if (dx == 0 && abs(dy) == 2) {
                 if (dy > 0) {
-                    return board[startX][startY+1] == nullptr &&
+                    return isLegalMove(startX, startY, startX, startY, true) &&
+                        board[startX][startY+1] == nullptr &&
                         board[startX][startY+2] == nullptr &&
                         isLegalMove(startX, startY, endX, startY + 1, true) &&
                         isLegalMove(startX, startY, endX, endY, true);
                 } else {
-                    return board[startX][startY-1] == nullptr &&
+                    return isLegalMove(startX, startY, startX, startY, true) &&
+                        board[startX][startY-1] == nullptr &&
                         board[startX][startY-2] == nullptr &&
                         isLegalMove(startX, startY, endX, endY - 1, true) &&
                         isLegalMove(startX, startY, endX, endY, true);
@@ -264,7 +266,7 @@ std::vector<std::pair<int, int>> Board::getLegalMoves(int startX, int startY, ch
             }
             if (board[startX][startY]->isValidPieceMove(startX, startY, i, j, board) && isLegalMove(startX, startY, i, j)) {
                 // Check legality and revert the move
-                std::cout << startX << " " << startY << "->" << i << " " << j << std::endl;
+                // std::cout << startX << " " << startY << "->" << i << " " << j << std::endl;
                 legalMoves.emplace_back(i, j);
             }
         }
