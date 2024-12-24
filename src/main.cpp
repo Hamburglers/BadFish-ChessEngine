@@ -85,7 +85,6 @@ int main() {
                 square.setPosition(j * squareSize, i * squareSize);
                 square.setFillColor((i + j) % 2 == 0 ? cream : brown);
                 window.draw(square);
-
                 Piece* piece = board.getPieceAt(i, j);
                 if (piece) {
                     std::string key = piece->getType() + std::string(1, piece->getColor());

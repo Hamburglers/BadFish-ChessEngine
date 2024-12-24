@@ -11,7 +11,7 @@ protected:
 
 public:
     Piece(char color) : color(color) {};
-    virtual ~Piece() {};
+    virtual ~Piece() = default; 
 
     char getColor() const { 
         return color;

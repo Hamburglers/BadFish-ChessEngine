@@ -21,7 +21,7 @@ public:
     Piece* getPieceAt(int row, int col) const;
     char getPieceColor(int row, int col) const;  
     void initialise();
-    void display();
+    void display() const;
     bool movePiece(int startX, int startY, int endX, int endY, char currentPlayer);
     std::vector<std::pair<int, int>> getLegalMoves(int startX, int startY, char currentPlayer);
 };

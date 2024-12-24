@@ -8,6 +8,7 @@
 #include "Piece.h"
 #include "Queen.h"
 #include "Rook.h"
+#include <typeinfo>
 
 Board::Board() {
     board = vector<vector<Piece*>>(8, vector<Piece*>(8, nullptr));
@@ -30,16 +31,22 @@ void Board::initialise() {
     }
 
     // rooks
-    board[0][0] = board[0][7] = new Rook('B');
-    board[7][0] = board[7][7] = new Rook('W');
+    board[0][0] = new Rook('B');
+    board[0][7] = new Rook('B');
+    board[7][0] = new Rook('W');
+    board[7][7] = new Rook('W');
 
     // knights
-    board[0][1] = board[0][6] = new Knight('B');
-    board[7][1] = board[7][6] = new Knight('W');
+    board[0][1] = new Knight('B');
+    board[0][6] = new Knight('B');
+    board[7][1] = new Knight('W');
+    board[7][6] = new Knight('W');
 
     // bishops
-    board[0][2] = board[0][5] = new Bishop('B');
-    board[7][2] = board[7][5] = new Bishop('W');
+    board[0][2] = new Bishop('B');
+    board[0][5] = new Bishop('B');
+    board[7][2] = new Bishop('W');
+    board[7][5] = new Bishop('W');
 
     // queens
     board[0][3] = new Queen('B');
@@ -50,7 +57,7 @@ void Board::initialise() {
     board[7][4] = new King('W');
 }
 
-void Board::display() {
+void Board::display() const {
     // clear terminal so looks nice
     std::cout << "\033[2J\033[H";
     for (int i = 0; i < 8; ++i) {
@@ -82,6 +89,9 @@ tuple<int, int> Board::getBlackKing() {
 }
 
 bool Board::isLegalMove(int startX, int startY, int endX, int endY) {
+    if (board[endX][endY] == nullptr) {
+        return true;
+    }
     // Backup the current state
     Piece* movingPiece = board[startX][startY];
     Piece* capturedPiece = board[endX][endY];
@@ -131,6 +141,14 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY) {
 
 
 bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPlayer) {
+    // if (board[startX][startY]) { // Check if the pointer is not null
+    //     std::cout << "Start position: " << typeid(*board[startX][startY]).name() << std::endl;
+    //     std::cout << board[startX][startY]->getType() << std::endl;
+    // }
+    // if (board[endX][endY]) { // Check if the pointer is not null
+    //     std::cout << "End position: " << typeid(*board[endX][endY]).name() << std::endl;
+    //     std::cout << board[endX][endY]->getType() << std::endl;
+    // }
     if (!isWithinBoard(startX, startY, endX, endY)) {
         std::cout << "Outside of grid bounds!" << std::endl; 
         return false;
@@ -147,7 +165,6 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         std::cout << "Invalid move!" << std::endl;
         return false;
     }
-
     if (!isLegalMove(startX, startY, endX, endY)) {
         std::cout << "Not a legal move!" << std::endl;
         return false;
@@ -161,11 +178,19 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
             blackKing = std::make_tuple(endX, endY);
         }
     }
-
     delete board[endX][endY];
     board[endX][endY] = board[startX][startY];
-    board[startX][startY] = nullptr;
     board[endX][endY]->makeMove();
+    board[startX][startY] = nullptr;
+    // if (board[startX][startY]) { // Check if the pointer is not null
+    //     std::cout << "Start position: " << typeid(*board[startX][startY]).name() << std::endl;
+    //     std::cout << board[startX][startY]->getType() << std::endl;
+    // }
+    // if (board[endX][endY]) { // Check if the pointer is not null
+    //     std::cout << "End position: " << typeid(*board[endX][endY]).name() << std::endl;
+    //     std::cout << board[endX][endY]->getType() << std::endl;
+    // }
+    display();
     return true;
 }
 
