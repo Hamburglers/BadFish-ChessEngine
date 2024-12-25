@@ -9,6 +9,7 @@
 #include "Queen.h"
 #include "Rook.h"
 #include <typeinfo>
+#include <sstream>
 
 std::tuple<int, int, int, int> Board::previousMove = {-1, -1, -1, -1};
 
@@ -59,6 +60,74 @@ void Board::initialise() {
     board[7][4] = new King('W');
 }
 
+void Board::loadFromFEN(string fen) {
+    std::istringstream fenStream(fen);
+    std::string piecePlacement, activeColor, castlingRights, enPassantSquare, halfmoveClock, fullmoveNumber;
+
+    // split the FEN string into its components
+    fenStream >> piecePlacement >> activeColor >> castlingRights >> enPassantSquare >> halfmoveClock >> fullmoveNumber;
+
+    // reset the board
+    board = vector<vector<Piece*>>(8, vector<Piece*>(8, nullptr));
+
+    // parse piece placement
+    int row = 0, col = 0;
+    for (char ch : piecePlacement) {
+        if (ch == '/') {
+            // move to the next row
+            row++;
+            col = 0;
+        } else if (isdigit(ch)) {
+            // empty squares
+            col += ch - '0';
+        } else {
+            // place a piece
+            char color = isupper(ch) ? 'W' : 'B';
+            ch = tolower(ch); // Normalize to lowercase for type checking
+            switch (ch) {
+                case 'p': board[row][col] = new Pawn(color); break;
+                case 'r': board[row][col] = new Rook(color); break;
+                case 'n': board[row][col] = new Knight(color); break;
+                case 'b': board[row][col] = new Bishop(color); break;
+                case 'q': board[row][col] = new Queen(color); break;
+                case 'k': 
+                    board[row][col] = new King(color); 
+                    if (color == 'W') whiteKing = {row, col};
+                    else blackKing = {row, col};
+                    break;
+            }
+            col++;
+        }
+    }
+
+    // parse active color
+    if (activeColor == "w") {
+        currentPlayer = 'W';
+    } else {
+        currentPlayer = 'B';
+    }
+
+    // parse castling rights
+    for (char ch : castlingRights) {
+        if (ch == 'K') whiteCastlingRights.kingSide = true;
+        if (ch == 'Q') whiteCastlingRights.queenSide = true;
+        if (ch == 'k') blackCastlingRights.kingSide = true;
+        if (ch == 'q') blackCastlingRights.queenSide = true;
+    }
+
+    // parse en passant target square
+    if (enPassantSquare != "-") {
+        int file = enPassantSquare[0] - 'a';
+        int rank = 8 - (enPassantSquare[1] - '0');
+        enPassantTarget = {rank, file};
+    } else {
+        enPassantTarget = {-1, -1};
+    }
+    // not needed for now
+    halfmoveClock = stoi(halfmoveClock);
+    fullmoveNumber = stoi(fullmoveNumber);
+}
+
 void Board::display() const {
     // clear terminal so looks nice
     std::cout << "\033[2J\033[H";
@@ -94,6 +163,7 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
     // Backup the current state
     Piece* movingPiece = board[startX][startY];
     Piece* capturedPiece = board[endX][endY];
+    Piece* enPassantCapturedPawn = nullptr;
 
     // castling logic, recursively calls thrice
     if (!flag && movingPiece->getType() == "King") {
@@ -105,24 +175,68 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
             // castling
             if (dx == 0 && abs(dy) == 2) {
                 if (dy > 0) {
-                    // first time to check if king is in check
-                    // check if square and 2nd square is empty
-                    // second time check if next square is in check
-                    // third time check if 2nd square is in check
+                    // king side castle, need to check 2 squares
                     return isLegalMove(startX, startY, startX, startY, true) &&
                         board[startX][startY+1] == nullptr &&
                         board[startX][startY+2] == nullptr &&
                         isLegalMove(startX, startY, endX, startY + 1, true) &&
                         isLegalMove(startX, startY, endX, endY, true);
                 } else {
+                    // queen side castle, need to check 3 squares
                     return isLegalMove(startX, startY, startX, startY, true) &&
                         board[startX][startY-1] == nullptr &&
                         board[startX][startY-2] == nullptr &&
+                        board[startX][startY-3] == nullptr &&
+                        isLegalMove(startX, startY, endX, endY - 2, true) &&
                         isLegalMove(startX, startY, endX, endY - 1, true) &&
                         isLegalMove(startX, startY, endX, endY, true);
                 }
             }
         }
+    }
+
+    // if enpassant
+    if (movingPiece->getType() == "Pawn" &&
+        get<1>(previousMove) == get<3>(previousMove) &&
+        abs(get<2>(previousMove) - get<0>(previousMove)) == 2 &&
+        abs(startY - get<1>(previousMove)) == 1 &&
+        startX == get<2>(previousMove)) {
+        // previous pawn's end rank
+        int capturedPawnX = get<2>(previousMove); 
+        // previous pawn's file/column
+        int capturedPawnY = get<3>(previousMove); 
+
+        // temporarily remove the en passant captured pawn
+        enPassantCapturedPawn = board[capturedPawnX][capturedPawnY];
+        board[capturedPawnX][capturedPawnY] = nullptr;
+
+        // move the current pawn to its destination
+        board[endX][endY] = movingPiece;
+        board[startX][startY] = nullptr;
+
+        // check if the king is in check after this move
+        char currentPlayer = movingPiece->getColor();
+        auto [kingX, kingY] = (currentPlayer == 'W') ? whiteKing : blackKing;
+        bool isInCheck = false;
+
+        // Check if the current player's king is in check
+        for (int i = 0; i < 8 && !isInCheck; i++) {
+            for (int j = 0; j < 8 && !isInCheck; j++) {
+                if (board[i][j] && board[i][j]->getColor() != currentPlayer) {
+                    // Check if the opponent piece can attack the king
+                    if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board)) {
+                        isInCheck = true;
+                    }
+                }
+            }
+        }
+
+        // undo the en passant move and restore the state
+        board[startX][startY] = movingPiece;
+        board[endX][endY] = nullptr;
+        board[capturedPawnX][capturedPawnY] = enPassantCapturedPawn;
+
+        return !isInCheck;
     }
 
     // Make the move temporarily
@@ -307,4 +421,55 @@ std::vector<std::pair<int, int>> Board::getLegalMoves(int startX, int startY, ch
         }
     }
     return legalMoves;
+}
+
+// backtracking performance testing for move path enumeratin
+long long Board::perft(int depth, char currentPlayer, long long& captureCount) {
+    // base case: one position at depth 0
+    if (depth == 0) {
+        return 1;
+    }
+
+    long long nodes = 0;
+
+    // generate all legal moves for the current player
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            Piece* piece = getPieceAt(i, j);
+            if (piece && piece->getColor() == currentPlayer) {
+                std::vector<std::pair<int, int>> legalMoves = getLegalMoves(i, j, currentPlayer);
+                for (const auto& move : legalMoves) {
+                    // make the move
+                    Piece* capturedPiece = board[move.first][move.second];
+                    bool isCapture = (capturedPiece != nullptr);
+                    board[move.first][move.second] = board[i][j];
+                    board[i][j] = nullptr;
+
+                    // update the position if king moves
+                    if (board[move.first][move.second]->getType() == "King") {
+                        if (currentPlayer == 'W') whiteKing = {move.first, move.second};
+                        else blackKing = {move.first, move.second};
+                    }
+
+                    // increment capture count if this move is a capture
+                    if (isCapture) {
+                        captureCount++;
+                    }
+
+                    // recurse to the next depth
+                    nodes += perft(depth - 1, currentPlayer == 'W' ? 'B' : 'W', captureCount);
+
+                    // undo the move (backtrack)
+                    board[i][j] = board[move.first][move.second];
+                    board[move.first][move.second] = capturedPiece;
+                    if (board[i][j]->getType() == "King") {
+                        if (currentPlayer == 'W') whiteKing = {i, j};
+                        else blackKing = {i, j};
+                    }
+                }
+            }
+        }
+    }
+
+    return nodes;
 }

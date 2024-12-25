@@ -2,11 +2,33 @@
 #include <unordered_map>
 #include <string>
 #include <iostream>
+#include <chrono>
 #include "Board.h"
 
 int main() {
     Board board;
-    board.initialise();
+    // board.initialise();
+    board.loadFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    // 1st run
+    // Perft Test - Depth: 0 - Nodes: 1 - Captures: 0 - Time: 8.4e-08 seconds
+    // Perft Test - Depth: 1 - Nodes: 20 - Captures: 0 - Time: 8.175e-05 seconds
+    // Perft Test - Depth: 2 - Nodes: 400 - Captures: 0 - Time: 0.00123687 seconds
+    // Perft Test - Depth: 3 - Nodes: 9194 - Captures: 34 - Time: 0.0231149 seconds (should be 8902)
+    // Perft Test - Depth: 4 - Nodes: 209691 - Captures: 1932 - Time: 0.385174 seconds (should be 197,281, 1576)
+    for (int depth = 0; depth < 5; depth++) {
+        char startingPlayer = 'W';
+        long long captureCount = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+        long long nodes = board.perft(depth, startingPlayer, captureCount);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Perft Test - Depth: " << depth 
+            << " - Nodes: " << nodes 
+            << " - Captures: " << captureCount
+            << " - Time: " << elapsed.count() << " seconds" 
+            << std::endl;
+    }
 
     sf::RenderWindow window(sf::VideoMode(1000, 1000), "Chess");
     sf::Texture piecesTexture;
@@ -106,24 +128,25 @@ int main() {
             window.draw(highlightSquare);
         }
         window.display();
-        if (currentPlayer == 'B') {
-            auto [bx, by] = board.getBlackKing();
-            if (!board.isLegalMove(bx, by, bx, by) && board.getLegalMoves(bx, by, 'B').empty()) {
-                std::cout << "White wins by Checkmate!\nPress <Enter> to quit" << std::endl;
-                std::string dummy;
-                getline(std::cin, dummy);
-                return 0; 
-            }
-        } else if (currentPlayer == 'W') {
-            auto [wx, wy] = board.getWhiteKing();
-            if (!board.isLegalMove(wx, wy, wx, wy) && board.getLegalMoves(wx, wy, 'W').empty()) {
-                std::cout << "Black wins by Checkmate!\nPress <Enter> to quit" << std::endl;
-                std::string dummy;
-                getline(std::cin, dummy);
-                return 0;
-            }
-        }
-
+        // incorrect, should loop through entire grid, checking for legal modes and checkmate if all is empty
+        // if (currentPlayer == 'B') {
+        //     auto [bx, by] = board.getBlackKing();
+        //     if (!board.isLegalMove(bx, by, bx, by) && board.getLegalMoves(bx, by, 'B').empty()) {
+        //         std::cout << "White wins by Checkmate!\nPress <Enter> to quit" << std::endl;
+        //         std::string dummy;
+        //         getline(std::cin, dummy);
+        //         return 0; 
+        //     }
+        // } else if (currentPlayer == 'W') {
+        //     auto [wx, wy] = board.getWhiteKing();
+        //     std::cout << wx << " " << wy << std::endl;
+        //     if (!board.isLegalMove(wx, wy, wx, wy) && board.getLegalMoves(wx, wy, 'W').empty()) {
+        //         std::cout << "Black wins by Checkmate!\nPress <Enter> to quit" << std::endl;
+        //         std::string dummy;
+        //         getline(std::cin, dummy);
+        //         return 0;
+        //     }
+        // }
     }
 
     return 0;

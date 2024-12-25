@@ -6,6 +6,11 @@
 #include <tuple>
 using namespace std;
 
+struct castle {
+    bool kingSide;
+    bool queenSide;
+};
+
 class Board {
 private:
     vector<vector<Piece*>> board;
@@ -14,13 +19,17 @@ private:
     bool isWhiteInCheck = false;
     std::tuple<int, int> whiteKing = {7, 4};
     bool isWithinBoard(int startX, int startY, int endX, int endY);
-    // startX, startY, endX, endY
+    char currentPlayer;
+    pair<int, int> enPassantTarget;
+    castle whiteCastlingRights;
+    castle blackCastlingRights;
 public:
     Board();
     ~Board();
     Piece* getPieceAt(int row, int col) const;
     char getPieceColor(int row, int col) const;  
     void initialise();
+    void loadFromFEN(string fen);
     void display() const;
     bool movePiece(int startX, int startY, int endX, int endY, char currentPlayer);
     std::vector<std::pair<int, int>> getLegalMoves(int startX, int startY, char currentPlayer);
@@ -28,5 +37,6 @@ public:
     std::tuple<int, int> getBlackKing();
     std::tuple<int, int> getWhiteKing();
     static tuple<int, int, int, int> previousMove;
+    long long perft(int depth, char currentPlayer, long long& captureCount);
 };
 #endif
