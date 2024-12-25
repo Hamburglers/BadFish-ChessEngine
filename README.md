@@ -4,6 +4,7 @@ Todo:
     -> (will do after making the engine might be easier to find out whats the invalid mode)
 4. threefold, 50 move draw
 6. actual chess engine stuff
+7. create function isSquareUnderAttack rather than keep calling isLegalMove
 
 To use Player vs Player
 cd build

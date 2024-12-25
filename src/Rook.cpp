@@ -15,7 +15,6 @@ bool Rook::canCastle() const {
 }
 
 bool Rook::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const {
-    // TODO: castle logic
     // straight line
     if (!(startX == endX || startY == endY)) {
         return false;

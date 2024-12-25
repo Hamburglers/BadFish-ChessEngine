@@ -12,8 +12,7 @@ struct castle {
 };
 
 class Board {
-private:
-    vector<vector<Piece*>> board;
+protected:
     std::tuple<int, int> blackKing = {0, 4};
     bool isBlackInCheck = false;
     bool isWhiteInCheck = false;
@@ -24,6 +23,7 @@ private:
     castle whiteCastlingRights;
     castle blackCastlingRights;
 public:
+    vector<vector<Piece*>> board;
     Board();
     ~Board();
     Piece* getPieceAt(int row, int col) const;
