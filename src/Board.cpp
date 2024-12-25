@@ -296,28 +296,28 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
 
     // check if even within bounds
     if (!isWithinBoard(startX, startY, endX, endY)) {
-        std::cout << "Outside of grid bounds!" << std::endl; 
+        // std::cout << "Outside of grid bounds!" << std::endl; 
         return false;
     }
     // check that piece moved is not empty or other players
     if (board[startX][startY] == nullptr || board[startX][startY]->getColor() != currentPlayer) {
-        std::cout << "Invalid piece selection!" << std::endl;
+        // std::cout << "Invalid piece selection!" << std::endl;
         return false;
     }
     // check if captured piece is either nothing, or the other player
     if (board[endX][endY] != nullptr && board[endX][endY]->getColor() == currentPlayer) {
-        std::cout << "Cannot capture own piece!" << std::endl;
+        // std::cout << "Cannot capture own piece!" << std::endl;
         return false;
     }
     // check if piece selected can move there (using its own overriden method)
     if (!board[startX][startY]->isValidPieceMove(startX, startY, endX, endY, board)) {
-        std::cout << "Invalid move!" << std::endl;
+        // std::cout << "Invalid move!" << std::endl;
         return false;
     }
     // now that the move is pseudolegal, check if it is actually legal
     // i.e. that it doesnt put king in check
     if (!isLegalMove(startX, startY, endX, endY)) {
-        std::cout << "Not a legal move!" << std::endl;
+        // std::cout << "Not a legal move!" << std::endl;
         return false;
     }
     // check if it was castle, then update rook as well

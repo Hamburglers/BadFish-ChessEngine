@@ -4,9 +4,11 @@
 #include <iostream>
 #include <chrono>
 #include "Board.h"
+#include "Engine.h"
 
 int main() {
     Board board;
+    Engine engine(board);
     // board.initialise();
     board.loadFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
@@ -98,7 +100,6 @@ int main() {
             }
 
             #else
-            std::cout<<1<<std::endl;
             // Player vs Computer Mode
             if (currentPlayer == 'W') {
                 if (event.type == sf::Event::MouseButtonPressed) {
@@ -129,7 +130,7 @@ int main() {
                 }
             } else {
                 // Computer's turn
-                auto [start, end] = Engine::getBestMove(board, currentPlayer);
+                auto [start, end] = engine.getBestMove(currentPlayer);
                 if (start.first == -1) {
                     std::cout << "Game over: no legal moves available.\n";
                     window.close();

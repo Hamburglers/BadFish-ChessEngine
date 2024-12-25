@@ -13,19 +13,19 @@ struct castle {
 
 class Board {
 protected:
-    std::tuple<int, int> blackKing = {0, 4};
     bool isBlackInCheck = false;
     bool isWhiteInCheck = false;
-    std::tuple<int, int> whiteKing = {7, 4};
     bool isWithinBoard(int startX, int startY, int endX, int endY);
     char currentPlayer;
     pair<int, int> enPassantTarget;
     castle whiteCastlingRights;
     castle blackCastlingRights;
 public:
-    vector<vector<Piece*>> board;
     Board();
     ~Board();
+    vector<vector<Piece*>> board;
+    std::tuple<int, int> whiteKing = {7, 4};
+    std::tuple<int, int> blackKing = {0, 4};
     Piece* getPieceAt(int row, int col) const;
     char getPieceColor(int row, int col) const;  
     void initialise();
