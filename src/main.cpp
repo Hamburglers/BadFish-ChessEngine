@@ -67,6 +67,9 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
+            #ifndef COMPUTER_MODE
+
+            // Player vs Player Mode (testing for me basically)
             if (event.type == sf::Event::MouseButtonPressed) {
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     int x = event.mouseButton.x / squareSize;
@@ -78,23 +81,65 @@ int main() {
                         if (selectedPiece && board.getPieceColor(y, x) == currentPlayer) {
                             selectedX = x;
                             selectedY = y;
-                            legalMoves = board.getLegalMoves(y, x, currentPlayer); // Calculate legal moves
+                            legalMoves = board.getLegalMoves(y, x, currentPlayer);
                         }
                     } else {
                         // Moving a piece
                         auto moveIt = std::find(legalMoves.begin(), legalMoves.end(), std::make_pair(y, x));
                         if (moveIt != legalMoves.end()) {
-                            // Move the piece only if the clicked square is a legal move
                             if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
                                 currentPlayer = (currentPlayer == 'W' ? 'B' : 'W');
                             }
                         }
-                        // Clear selection after moving (or failing to move)
                         selectedX = selectedY = -1;
                         legalMoves.clear();
                     }
                 }
             }
+
+            #else
+            std::cout<<1<<std::endl;
+            // Player vs Computer Mode
+            if (currentPlayer == 'W') {
+                if (event.type == sf::Event::MouseButtonPressed) {
+                    if (event.mouseButton.button == sf::Mouse::Left) {
+                        int x = event.mouseButton.x / squareSize;
+                        int y = event.mouseButton.y / squareSize;
+
+                        if (selectedX == -1 && selectedY == -1) {
+                            // Selecting a piece
+                            selectedPiece = board.getPieceAt(y, x);
+                            if (selectedPiece && board.getPieceColor(y, x) == currentPlayer) {
+                                selectedX = x;
+                                selectedY = y;
+                                legalMoves = board.getLegalMoves(y, x, currentPlayer);
+                            }
+                        } else {
+                            // Moving a piece
+                            auto moveIt = std::find(legalMoves.begin(), legalMoves.end(), std::make_pair(y, x));
+                            if (moveIt != legalMoves.end()) {
+                                if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
+                                    currentPlayer = 'B';
+                                }
+                            }
+                            selectedX = selectedY = -1;
+                            legalMoves.clear();
+                        }
+                    }
+                }
+            } else {
+                // Computer's turn
+                auto [start, end] = Engine::getBestMove(board, currentPlayer);
+                if (start.first == -1) {
+                    std::cout << "Game over: no legal moves available.\n";
+                    window.close();
+                } else {
+                    if (board.movePiece(start.first, start.second, end.first, end.second, currentPlayer)) {
+                        currentPlayer = 'W';
+                    }
+                }
+            }
+            #endif
         }
 
         window.clear();

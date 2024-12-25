@@ -5,6 +5,9 @@ project(ChessGame)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Option to enable COMPUTER_MODE
+option(COMPUTER_MODE "Enable Player vs Computer mode" OFF)
+
 # Locate SFML
 find_package(SFML 2.5 COMPONENTS system window graphics REQUIRED)
 
@@ -19,3 +22,8 @@ add_executable(ChessGame ${SOURCES})
 
 # Link SFML libraries
 target_link_libraries(ChessGame sfml-system sfml-window sfml-graphics)
+
+# Add compilation flag for COMPUTER_MODE if enabled
+if(COMPUTER_MODE)
+    target_compile_definitions(ChessGame PRIVATE COMPUTER_MODE)
+endif()
