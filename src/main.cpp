@@ -62,6 +62,7 @@ int main() {
     int selectedX = -1, selectedY = -1;
     std::vector<std::pair<int, int>> legalMoves;
     Piece* selectedPiece = nullptr;
+    auto [px, py, px1, py1] = board.previousMove;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -87,6 +88,8 @@ int main() {
                         }
                     } else {
                         // Moving a piece
+                        std::tie(px, py) = {y, x};
+                        std::tie(px1, py1) = {selectedY, selectedX};
                         auto moveIt = std::find(legalMoves.begin(), legalMoves.end(), std::make_pair(y, x));
                         if (moveIt != legalMoves.end()) {
                             if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
@@ -131,6 +134,8 @@ int main() {
             } else {
                 // Computer's turn
                 auto [start, end] = engine.getBestMove(currentPlayer);
+                std::tie(px, py) = start;
+                std::tie(px1, py1) = end;
                 if (start.first == -1) {
                     std::cout << "Game over: no legal moves available.\n";
                     window.close();
@@ -146,7 +151,10 @@ int main() {
         window.clear();
         sf::Color cream(240, 217, 181);
         sf::Color brown(181, 136, 99);
-        sf::Color highlight(50, 205, 50, 128); // Semi-transparent green
+        sf::Color highlight(50, 205, 50, 128); // semi-transparent green
+        sf::Color previousMove(238, 75, 43, 128); // red
+
+
 
         // Render board
         for (int i = 0; i < 8; i++) {
@@ -166,6 +174,21 @@ int main() {
                 }
             }
         }
+        // highlight previous move
+        if (px != -1 && py != -1 && px1 != -1 && py1 != -1) {
+            sf::RectangleShape highlightSquare1(sf::Vector2f(squareSize, squareSize));
+            
+            // Highlight the starting square of the previous move
+            highlightSquare1.setPosition(py * squareSize, px * squareSize);
+            highlightSquare1.setFillColor(previousMove);
+            window.draw(highlightSquare1);
+            
+            // Highlight the ending square of the previous move
+            highlightSquare1.setPosition(py1 * squareSize, px1 * squareSize);
+            highlightSquare1.setFillColor(previousMove);
+            window.draw(highlightSquare1);
+        }
+
         // Highlight legal moves
         for (auto& move : legalMoves) {
             sf::RectangleShape highlightSquare(sf::Vector2f(squareSize, squareSize));
@@ -174,6 +197,7 @@ int main() {
             window.draw(highlightSquare);
         }
         window.display();
+
         // incorrect, should loop through entire grid, checking for legal modes and checkmate if all is empty
         // if (currentPlayer == 'B') {
         //     auto [bx, by] = board.getBlackKing();

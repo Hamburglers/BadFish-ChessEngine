@@ -4,7 +4,7 @@
 #include "King.h"
 #include <iostream>
 
-#define DEPTH 1
+#define DEPTH 3
 
 Engine::Engine(Board& board) : board(board) {}
 
@@ -44,6 +44,9 @@ int Engine::evaluate() const {
         for (int j = 0; j < 8; j++) {
             if (board.board[i][j]) {
                 Piece* piece = board.board[i][j];
+                if (piece->getType() == "King") {
+                    continue;
+                }
                 if (piece->getColor() == 'W') {
                     whiteEval += pieceValues.find(piece->getType())->second;
                 } else {
@@ -67,7 +70,6 @@ int Engine::minimax(int depth, char currentPlayer, int alpha, int beta) {
     if (depth == 0) {
         return evaluate(); // Evaluate the board at the current state
     }
-
     if (currentPlayer == 'W') { // Maximizing player
         int maxEval = -1000000;
         for (int startX = 0; startX < 8; startX++) {
