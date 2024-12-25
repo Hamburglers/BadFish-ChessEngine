@@ -200,11 +200,14 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
         get<1>(previousMove) == get<3>(previousMove) &&
         abs(get<2>(previousMove) - get<0>(previousMove)) == 2 &&
         abs(startY - get<1>(previousMove)) == 1 &&
-        startX == get<2>(previousMove)) {
+        startX == get<2>(previousMove) &&
+        endX == get<2>(previousMove) + 
+            ((board[get<2>(previousMove)][get<3>(previousMove)]->getColor() == 'B') ? -1 : 1) &&
+        endY == get<3>(previousMove)) {
         // previous pawn's end rank
         int capturedPawnX = get<2>(previousMove); 
         // previous pawn's file/column
-        int capturedPawnY = get<3>(previousMove); 
+        int capturedPawnY = get<3>(previousMove);
 
         // temporarily remove the en passant captured pawn
         enPassantCapturedPawn = board[capturedPawnX][capturedPawnY];
@@ -235,7 +238,6 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
         board[startX][startY] = movingPiece;
         board[endX][endY] = nullptr;
         board[capturedPawnX][capturedPawnY] = enPassantCapturedPawn;
-
         return !isInCheck;
     }
 
@@ -358,10 +360,14 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         board[startX][startY] = nullptr;
         board[endX][endY] = new Queen('B');
     // enpassant, need to remove the pawn being enpassanted
-    } else if (type == "Pawn" && get<1>(previousMove) == get<3>(previousMove) &&
-           abs(get<2>(previousMove) - get<0>(previousMove)) == 2 &&
-           abs(startY - get<1>(previousMove)) == 1 &&
-           startX == get<2>(previousMove)) {
+    } else if (type == "Pawn" &&
+        get<1>(previousMove) == get<3>(previousMove) &&
+        abs(get<2>(previousMove) - get<0>(previousMove)) == 2 &&
+        abs(startY - get<1>(previousMove)) == 1 &&
+        startX == get<2>(previousMove) &&
+        endX == get<2>(previousMove) + 
+            ((board[get<2>(previousMove)][get<3>(previousMove)]->getColor() == 'B') ? -1 : 1) &&
+        endY == get<3>(previousMove)) {
         int capturedPawnX = get<2>(previousMove); // Previous pawn's end rank
         int capturedPawnY = get<3>(previousMove); // Previous pawn's file/column
 

@@ -16,19 +16,19 @@ int main() {
     // Perft Test - Depth: 2 - Nodes: 400 - Captures: 0 - Time: 0.00123687 seconds
     // Perft Test - Depth: 3 - Nodes: 9194 - Captures: 34 - Time: 0.0231149 seconds (should be 8902)
     // Perft Test - Depth: 4 - Nodes: 209691 - Captures: 1932 - Time: 0.385174 seconds (should be 197,281, 1576)
-    for (int depth = 0; depth < 5; depth++) {
-        char startingPlayer = 'W';
-        long long captureCount = 0;
-        auto start = std::chrono::high_resolution_clock::now();
-        long long nodes = board.perft(depth, startingPlayer, captureCount);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Perft Test - Depth: " << depth 
-            << " - Nodes: " << nodes 
-            << " - Captures: " << captureCount
-            << " - Time: " << elapsed.count() << " seconds" 
-            << std::endl;
-    }
+    // for (int depth = 0; depth < 5; depth++) {
+    //     char startingPlayer = 'W';
+    //     long long captureCount = 0;
+    //     auto start = std::chrono::high_resolution_clock::now();
+    //     long long nodes = board.perft(depth, startingPlayer, captureCount);
+    //     auto end = std::chrono::high_resolution_clock::now();
+    //     std::chrono::duration<double> elapsed = end - start;
+    //     std::cout << "Perft Test - Depth: " << depth 
+    //         << " - Nodes: " << nodes 
+    //         << " - Captures: " << captureCount
+    //         << " - Time: " << elapsed.count() << " seconds" 
+    //         << std::endl;
+    // }
 
     sf::RenderWindow window(sf::VideoMode(1000, 1000), "Chess");
     sf::Texture piecesTexture;
