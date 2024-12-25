@@ -23,6 +23,8 @@ protected:
 public:
     Board();
     ~Board();
+    Board& operator=(const Board& other);
+    Board(const Board& other);
     vector<vector<Piece*>> board;
     std::tuple<int, int> whiteKing = {7, 4};
     std::tuple<int, int> blackKing = {0, 4};
@@ -36,7 +38,7 @@ public:
     bool isLegalMove(int startX, int startY, int endX, int endY, bool flag=false);
     std::tuple<int, int> getBlackKing();
     std::tuple<int, int> getWhiteKing();
-    static tuple<int, int, int, int> previousMove;
+    tuple<int, int, int, int> previousMove = {-1, -1, -1, -1};
     long long perft(int depth, char currentPlayer, long long& captureCount);
 };
 #endif

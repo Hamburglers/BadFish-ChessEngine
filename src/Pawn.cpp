@@ -9,7 +9,7 @@ void Pawn::makeMove() {
     hasMoved = true;
 }
 
-bool Pawn::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const {
+bool Pawn::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board, tuple<int, int, int, int> previousMove) const {
     int direction = (color == 'W') ? -1 : 1;
 
     // standard forward move
@@ -32,7 +32,7 @@ bool Pawn::isValidPieceMove(int startX, int startY, int endX, int endY, const ve
     }
 
     // enpassant
-    const auto& [prevStartX, prevStartY, prevEndX, prevEndY] = Board::previousMove;
+    const auto& [prevStartX, prevStartY, prevEndX, prevEndY] = previousMove;
     // the first move has not been made yet
     if (prevStartX == -1 || prevStartY == -1 || prevEndX == -1 || prevEndY == -1) {
         return false;

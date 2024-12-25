@@ -14,9 +14,13 @@ public:
     
     string getType() const override;
 
-    bool isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const override;
+    bool isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board, tuple<int, int, int, int> previousMove) const override;
 
     void makeMove() override;
+
+    Piece* clone() const override {
+        return new Pawn(*this);
+    }
 };
 
 #endif

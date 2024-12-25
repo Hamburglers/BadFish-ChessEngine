@@ -11,8 +11,6 @@
 #include <typeinfo>
 #include <sstream>
 
-std::tuple<int, int, int, int> Board::previousMove = {-1, -1, -1, -1};
-
 Board::Board() {
     board = vector<vector<Piece*>>(8, vector<Piece*>(8, nullptr));
 }
@@ -24,6 +22,62 @@ Board::~Board() {
             delete piece;
         }
     }
+}
+
+// Copy constructor
+Board::Board(const Board& other) {
+    // Deep copy of board
+    board.resize(8, vector<Piece*>(8, nullptr));
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            if (other.board[i][j]) {
+                board[i][j] = other.board[i][j]->clone();
+            }
+        }
+    }
+
+    // Copy other members
+    isBlackInCheck = other.isBlackInCheck;
+    isWhiteInCheck = other.isWhiteInCheck;
+    currentPlayer = other.currentPlayer;
+    enPassantTarget = other.enPassantTarget;
+    whiteCastlingRights = other.whiteCastlingRights;
+    blackCastlingRights = other.blackCastlingRights;
+    whiteKing = other.whiteKing;
+    blackKing = other.blackKing;
+}
+
+// Copy assignment operator
+Board& Board::operator=(const Board& other) {
+    if (this != &other) {
+        // Free existing resources
+        for (auto& row : board) {
+            for (auto& piece : row) {
+                delete piece; // Clean up existing pointers
+            }
+        }
+
+        // Resize and deep copy board
+        board.resize(8, vector<Piece*>(8, nullptr));
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
+                if (other.board[i][j]) {
+                    board[i][j] = other.board[i][j]->clone();
+                }
+            }
+        }
+
+        // Copy other members
+        isBlackInCheck = other.isBlackInCheck;
+        isWhiteInCheck = other.isWhiteInCheck;
+        currentPlayer = other.currentPlayer;
+        enPassantTarget = other.enPassantTarget;
+        whiteCastlingRights = other.whiteCastlingRights;
+        blackCastlingRights = other.blackCastlingRights;
+        whiteKing = other.whiteKing;
+        blackKing = other.blackKing;
+    }
+    return *this;
 }
 
 void Board::initialise() {
@@ -187,8 +241,8 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
                         board[startX][startY-1] == nullptr &&
                         board[startX][startY-2] == nullptr &&
                         board[startX][startY-3] == nullptr &&
-                        isLegalMove(startX, startY, endX, endY - 2, true) &&
-                        isLegalMove(startX, startY, endX, endY - 1, true) &&
+                        isLegalMove(startX, startY, endX, startY - 2, true) &&
+                        isLegalMove(startX, startY, endX, startY - 1, true) &&
                         isLegalMove(startX, startY, endX, endY, true);
                 }
             }
@@ -227,7 +281,7 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
             for (int j = 0; j < 8 && !isInCheck; j++) {
                 if (board[i][j] && board[i][j]->getColor() != currentPlayer) {
                     // Check if the opponent piece can attack the king
-                    if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board)) {
+                    if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board, previousMove)) {
                         isInCheck = true;
                     }
                 }
@@ -262,7 +316,7 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
         for (int j = 0; j < 8 && !isInCheck; j++) {
             if (board[i][j] && board[i][j]->getColor() != currentPlayer) {
                 // Check if the opponent piece can attack the king
-                if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board)) {
+                if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board, previousMove)) {
                     isInCheck = true;
                 }
             }
@@ -310,7 +364,7 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         return false;
     }
     // check if piece selected can move there (using its own overriden method)
-    if (!board[startX][startY]->isValidPieceMove(startX, startY, endX, endY, board)) {
+    if (!board[startX][startY]->isValidPieceMove(startX, startY, endX, endY, board, previousMove)) {
         // std::cout << "Invalid move!" << std::endl;
         return false;
     }
@@ -419,7 +473,7 @@ std::vector<std::pair<int, int>> Board::getLegalMoves(int startX, int startY, ch
             if (i == startX and j == startY) {
                 continue;
             }
-            if (board[startX][startY]->isValidPieceMove(startX, startY, i, j, board) && isLegalMove(startX, startY, i, j)) {
+            if (board[startX][startY]->isValidPieceMove(startX, startY, i, j, board, previousMove) && isLegalMove(startX, startY, i, j)) {
                 // Check legality and revert the move
                 // std::cout << startX << " " << startY << "->" << i << " " << j << std::endl;
                 legalMoves.emplace_back(i, j);

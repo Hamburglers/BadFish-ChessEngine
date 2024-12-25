@@ -88,12 +88,12 @@ int main() {
                         }
                     } else {
                         // Moving a piece
-                        std::tie(px, py) = {y, x};
-                        std::tie(px1, py1) = {selectedY, selectedX};
                         auto moveIt = std::find(legalMoves.begin(), legalMoves.end(), std::make_pair(y, x));
                         if (moveIt != legalMoves.end()) {
                             if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
                                 currentPlayer = (currentPlayer == 'W' ? 'B' : 'W');
+                                std::tie(px, py) = {y, x};
+                                std::tie(px1, py1) = {selectedY, selectedX};
                             }
                         }
                         selectedX = selectedY = -1;

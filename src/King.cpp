@@ -41,7 +41,7 @@ bool King::checkPseudoCastle(int endX, int endY, const vector<vector<Piece*>>& b
     return false;
 }
 
-bool King::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const {
+bool King::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board, tuple<int, int, int, int> previousMove) const {
 
     if (!hasMoved) {
         if (checkPseudoCastle(endX, endY, board)) {

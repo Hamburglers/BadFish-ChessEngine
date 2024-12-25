@@ -6,7 +6,7 @@ string Queen::getType() const {
     return "Queen";
 }
 
-bool Queen::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const {
+bool Queen::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board, tuple<int, int, int, int> previousMove) const {
     int dx = abs(endX - startX);
     int dy = abs(endY - startY);
 

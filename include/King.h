@@ -32,13 +32,17 @@ public:
 
     std::string getType() const override;
 
-    bool isValidPieceMove(int startX, int startY, int endX, int endY, const std::vector<std::vector<Piece*>>& board) const override;
+    bool isValidPieceMove(int startX, int startY, int endX, int endY, const std::vector<std::vector<Piece*>>& board, tuple<int, int, int, int> previousMove) const override;
 
     void makeMove() override;
 
     bool checkPseudoCastle(int endX, int endY, const std::vector<std::vector<Piece*>>& board) const;
 
     pair<int, int> getRookPosition(int endX, int endY, const vector<vector<Piece*>>& board) const;
+
+    Piece* clone() const override {
+        return new King(*this);
+    }
 };
 
 #endif

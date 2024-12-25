@@ -3,9 +3,11 @@
 
 Bishop::Bishop(char color) : Piece(color) {}
 
+
+
 string Bishop::getType() const { return "Bishop"; }
 
-bool Bishop::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const {
+bool Bishop::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board, tuple<int, int, int, int> previousMove) const {
     int dx = abs(endX - startX);
     int dy = abs(endY - startY);
 

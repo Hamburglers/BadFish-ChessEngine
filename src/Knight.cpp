@@ -4,7 +4,7 @@ Knight::Knight(char color) : Piece(color) {}
 
 string Knight::getType() const { return "Knight"; }
 
-bool Knight::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board) const {
+bool Knight::isValidPieceMove(int startX, int startY, int endX, int endY, const vector<vector<Piece*>>& board, tuple<int, int, int, int> previousMove) const {
     int dx = abs(endX - startX);
     int dy = abs(endY - startY);
 
