@@ -13,10 +13,7 @@ private:
     bool isBlackInCheck = false;
     bool isWhiteInCheck = false;
     std::tuple<int, int> whiteKing = {7, 4};
-    std::tuple<int, int> getBlackKing();
-    std::tuple<int, int> getWhiteKing();
     bool isWithinBoard(int startX, int startY, int endX, int endY);
-    bool isLegalMove(int startX, int startY, int endX, int endY, bool flag);
     // startX, startY, endX, endY
 public:
     Board();
@@ -27,6 +24,9 @@ public:
     void display() const;
     bool movePiece(int startX, int startY, int endX, int endY, char currentPlayer);
     std::vector<std::pair<int, int>> getLegalMoves(int startX, int startY, char currentPlayer);
+    bool isLegalMove(int startX, int startY, int endX, int endY, bool flag=false);
+    std::tuple<int, int> getBlackKing();
+    std::tuple<int, int> getWhiteKing();
     static tuple<int, int, int, int> previousMove;
 };
 #endif

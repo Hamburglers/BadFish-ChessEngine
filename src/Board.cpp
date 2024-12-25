@@ -90,7 +90,7 @@ tuple<int, int> Board::getBlackKing() {
     return blackKing;
 }
 
-bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag=false) {
+bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
     // Backup the current state
     Piece* movingPiece = board[startX][startY];
     Piece* capturedPiece = board[endX][endY];

@@ -37,6 +37,7 @@ int main() {
     char currentPlayer = 'W';
     int selectedX = -1, selectedY = -1;
     std::vector<std::pair<int, int>> legalMoves;
+    Piece* selectedPiece = nullptr;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -51,7 +52,8 @@ int main() {
 
                     if (selectedX == -1 && selectedY == -1) {
                         // Selecting a piece
-                        if (board.getPieceAt(y, x) && board.getPieceColor(y, x) == currentPlayer) {
+                        selectedPiece = board.getPieceAt(y, x);
+                        if (selectedPiece && board.getPieceColor(y, x) == currentPlayer) {
                             selectedX = x;
                             selectedY = y;
                             legalMoves = board.getLegalMoves(y, x, currentPlayer); // Calculate legal moves
@@ -96,7 +98,6 @@ int main() {
                 }
             }
         }
-
         // Highlight legal moves
         for (auto& move : legalMoves) {
             sf::RectangleShape highlightSquare(sf::Vector2f(squareSize, squareSize));
@@ -104,8 +105,25 @@ int main() {
             highlightSquare.setFillColor(highlight);
             window.draw(highlightSquare);
         }
-
         window.display();
+        if (currentPlayer == 'B') {
+            auto [bx, by] = board.getBlackKing();
+            if (!board.isLegalMove(bx, by, bx, by) && board.getLegalMoves(bx, by, 'B').empty()) {
+                std::cout << "White wins by Checkmate!\nPress <Enter> to quit" << std::endl;
+                std::string dummy;
+                getline(std::cin, dummy);
+                return 0; 
+            }
+        } else if (currentPlayer == 'W') {
+            auto [wx, wy] = board.getWhiteKing();
+            if (!board.isLegalMove(wx, wy, wx, wy) && board.getLegalMoves(wx, wy, 'W').empty()) {
+                std::cout << "Black wins by Checkmate!\nPress <Enter> to quit" << std::endl;
+                std::string dummy;
+                getline(std::cin, dummy);
+                return 0;
+            }
+        }
+
     }
 
     return 0;
