@@ -10,6 +10,8 @@
 #include "Rook.h"
 #include <typeinfo>
 
+std::tuple<int, int, int, int> Board::previousMove = {-1, -1, -1, -1};
+
 Board::Board() {
     board = vector<vector<Piece*>>(8, vector<Piece*>(8, nullptr));
 }
@@ -93,7 +95,7 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag=fa
     Piece* movingPiece = board[startX][startY];
     Piece* capturedPiece = board[endX][endY];
 
-    // castling logic, recursively calls twice
+    // castling logic, recursively calls thrice
     if (!flag && movingPiece->getType() == "King") {
         King* kingPiece = static_cast<King*>(movingPiece);
         // if both king and rook have not moved
@@ -103,6 +105,10 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag=fa
             // castling
             if (dx == 0 && abs(dy) == 2) {
                 if (dy > 0) {
+                    // first time to check if king is in check
+                    // check if square and 2nd square is empty
+                    // second time check if next square is in check
+                    // third time check if 2nd square is in check
                     return isLegalMove(startX, startY, startX, startY, true) &&
                         board[startX][startY+1] == nullptr &&
                         board[startX][startY+2] == nullptr &&
@@ -227,15 +233,32 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         }
     }
     delete board[endX][endY];
+    auto type = board[startX][startY]->getType();
     // promotion for pawn on 0th, 7th rank
-    if (board[startX][startY]->getType() == "Pawn" && endX == 0 && currentPlayer == 'W') {
+    if (type == "Pawn" && endX == 0 && currentPlayer == 'W') {
         delete board[startX][startY];
         board[startX][startY] = nullptr;
         board[endX][endY] = new Queen('W');
-    } else if (board[startX][startY]->getType() == "Pawn" && endX == 7 && currentPlayer == 'B') {
+    } else if (type == "Pawn" && endX == 7 && currentPlayer == 'B') {
         delete board[startX][startY];
         board[startX][startY] = nullptr;
         board[endX][endY] = new Queen('B');
+    // enpassant, need to remove the pawn being enpassanted
+    } else if (type == "Pawn" && get<1>(previousMove) == get<3>(previousMove) &&
+           abs(get<2>(previousMove) - get<0>(previousMove)) == 2 &&
+           abs(startY - get<1>(previousMove)) == 1 &&
+           startX == get<2>(previousMove)) {
+        int capturedPawnX = get<2>(previousMove); // Previous pawn's end rank
+        int capturedPawnY = get<3>(previousMove); // Previous pawn's file/column
+
+        // delete the en passant captured pawn
+        delete board[capturedPawnX][capturedPawnY];
+        board[capturedPawnX][capturedPawnY] = nullptr;
+
+        // move the current pawn to its destination
+        board[endX][endY] = board[startX][startY];
+        board[endX][endY]->makeMove();
+        board[startX][startY] = nullptr;
     } else {
         board[endX][endY] = board[startX][startY];
         board[endX][endY]->makeMove();
@@ -249,6 +272,7 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
     //     std::cout << "End position: " << typeid(*board[endX][endY]).name() << std::endl;
     //     std::cout << board[endX][endY]->getType() << std::endl;
     // }
+    previousMove = {startX, startY, endX, endY};
     display();
     return true;
 }

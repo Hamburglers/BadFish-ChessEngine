@@ -17,6 +17,7 @@ private:
     std::tuple<int, int> getWhiteKing();
     bool isWithinBoard(int startX, int startY, int endX, int endY);
     bool isLegalMove(int startX, int startY, int endX, int endY, bool flag);
+    // startX, startY, endX, endY
 public:
     Board();
     ~Board();
@@ -26,6 +27,6 @@ public:
     void display() const;
     bool movePiece(int startX, int startY, int endX, int endY, char currentPlayer);
     std::vector<std::pair<int, int>> getLegalMoves(int startX, int startY, char currentPlayer);
+    static tuple<int, int, int, int> previousMove;
 };
-
 #endif
