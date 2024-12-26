@@ -447,7 +447,7 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
     //     std::cout << board[endX][endY]->getType() << std::endl;
     // }
     previousMove = {startX, startY, endX, endY};
-    display();
+    //display();
     return true;
 }
 

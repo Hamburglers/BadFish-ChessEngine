@@ -6,7 +6,7 @@
 #include <mutex>
 #include <thread>
 
-#define DEPTH 3
+#define DEPTH 4
 
 Engine::Engine(Board& board) : board(board) {}
 
@@ -39,7 +39,7 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char cur
 
         for (const auto& [startX, startY, end] : movesSubset) {
             int eval;
-            if (moveAndUnmove(startX, startY, end.first, end.second, eval, DEPTH, currentPlayer)) {
+            if (moveAndUnmove(startX, startY, end.first, end.second, eval, DEPTH, currentPlayer, threadLocalBoard)) {
                 if ((currentPlayer == 'W' && eval > localBestValue) ||
                     (currentPlayer == 'B' && eval < localBestValue)) {
                     localBestValue = eval;
@@ -56,6 +56,16 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char cur
         }
     };
     // divide the moves into chunks for each thread
+
+    // Goes from: (1 thread only)
+    // Spent 3.53503s
+    // Spent 6.25526s
+    // Spent 10.4587s
+
+    // to: (12 threads on my cpu)
+    // Spent 0.922531s
+    // Spent 1.29316s
+    // Spent 1.52756s
     const int numThreads = std::thread::hardware_concurrency();
     std::vector<std::thread> threads;
     size_t chunkSize = std::max((moves.size() + numThreads - 1) / numThreads, size_t(1));
@@ -76,13 +86,13 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char cur
     return bestMove;
 }
 
-int Engine::evaluate() const {
+int Engine::evaluate(Board& threadLocalBoard) const {
     int whiteEval{};
     int blackEval{};
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            if (board.board[i][j]) {
-                Piece* piece = board.board[i][j];
+            if (threadLocalBoard.board[i][j]) {
+                Piece* piece = threadLocalBoard.board[i][j];
                 if (piece->getType() == "King") {
                     continue;
                 }
@@ -97,30 +107,30 @@ int Engine::evaluate() const {
     return whiteEval - blackEval;
 }
 
-int Engine::evaluatePosition(int depth, char currentPlayer) {
+int Engine::evaluatePosition(int depth, char currentPlayer, Board& threadLocalBoard) {
     if (depth > 0) {
-        return minimax(depth - 1, (currentPlayer == 'W') ? 'B' : 'W', -1000000, 1000000);
+        return minimax(depth - 1, (currentPlayer == 'W') ? 'B' : 'W', -1000000, 1000000, threadLocalBoard);
     }
-    return evaluate();
+    return evaluate(threadLocalBoard);
 }
 
-int Engine::minimax(int depth, char currentPlayer, int alpha, int beta) {
+int Engine::minimax(int depth, char currentPlayer, int alpha, int beta, Board& threadLocalBoard) {
     // base case: if depth is 0
     if (depth == 0) {
-        return evaluate();
+        return evaluate(threadLocalBoard);
     }
     // maximizing player
     if (currentPlayer == 'W') {
         int maxEval = -1000000;
         for (int startX = 0; startX < 8; startX++) {
             for (int startY = 0; startY < 8; startY++) {
-                Piece* piece = board.board[startX][startY];
+                Piece* piece = threadLocalBoard.board[startX][startY];
                 if (piece && piece->getColor() == 'W') {
                     // get legal moves for the piece
-                    std::vector<std::pair<int, int>> legalMoves = board.getLegalMoves(startX, startY, 'W');
+                    std::vector<std::pair<int, int>> legalMoves = threadLocalBoard.getLegalMoves(startX, startY, 'W');
                     for (const auto& move : legalMoves) {
                         int eval;
-                        if (moveAndUnmove(startX, startY, move.first, move.second, eval, depth, currentPlayer)) {
+                        if (moveAndUnmove(startX, startY, move.first, move.second, eval, depth, currentPlayer, threadLocalBoard)) {
                             maxEval = std::max(maxEval, eval);
                             alpha = std::max(alpha, maxEval);
                             // Alpha-beta pruning
@@ -138,13 +148,13 @@ int Engine::minimax(int depth, char currentPlayer, int alpha, int beta) {
         int minEval = 1000000;
         for (int startX = 0; startX < 8; startX++) {
             for (int startY = 0; startY < 8; startY++) {
-                Piece* piece = board.board[startX][startY];
+                Piece* piece = threadLocalBoard.board[startX][startY];
                 if (piece && piece->getColor() == 'B') {
                     // Get legal moves for the piece
-                    std::vector<std::pair<int, int>> legalMoves = board.getLegalMoves(startX, startY, 'B');
+                    std::vector<std::pair<int, int>> legalMoves = threadLocalBoard.getLegalMoves(startX, startY, 'B');
                     for (const auto& move : legalMoves) {
                         int eval;
-                        if (moveAndUnmove(startX, startY, move.first, move.second, eval, depth, currentPlayer)) {
+                        if (moveAndUnmove(startX, startY, move.first, move.second, eval, depth, currentPlayer, threadLocalBoard)) {
                             minEval = std::min(minEval, eval);
                             beta = std::min(beta, minEval);
                             // Alpha-beta pruning
@@ -160,17 +170,17 @@ int Engine::minimax(int depth, char currentPlayer, int alpha, int beta) {
     }
 }
 
-bool Engine::moveAndUnmove(int startX, int startY, int endX, int endY, int &eval, int depth, char currentPlayer, bool flag) {
+bool Engine::moveAndUnmove(int startX, int startY, int endX, int endY, int &eval, int depth, char currentPlayer, Board& threadLocalBoard, bool flag) {
     // backup the current state
-    Piece* movingPiece = board.board[startX][startY];
-    Piece* capturedPiece = board.board[endX][endY];
+    Piece* movingPiece = threadLocalBoard.board[startX][startY];
+    Piece* capturedPiece = threadLocalBoard.board[endX][endY];
     Piece* enPassantCapturedPawn = nullptr;
 
     // castling logic, recursively calls thrice
     if (!flag && movingPiece->getType() == "King") {
         King* kingPiece = static_cast<King*>(movingPiece);
         // if both king and rook have not moved
-        if (kingPiece->checkPseudoCastle(endX, endY, board.board)) {
+        if (kingPiece->checkPseudoCastle(endX, endY, threadLocalBoard.board)) {
             int dx = endX - startX;
             int dy = endY - startY;
             // castling
@@ -178,67 +188,67 @@ bool Engine::moveAndUnmove(int startX, int startY, int endX, int endY, int &eval
                 bool result;
                 if (dy > 0) {
                     // king side castle, need to check 2 squares
-                    result = board.isLegalMove(startX, startY, startX, startY, true) &&
-                        board.board[startX][startY+1] == nullptr &&
-                        board.board[startX][startY+2] == nullptr &&
-                        board.isLegalMove(startX, startY, endX, startY + 1, true) &&
-                        board.isLegalMove(startX, startY, endX, endY, true);
+                    result = threadLocalBoard.isLegalMove(startX, startY, startX, startY, true) &&
+                        threadLocalBoard.board[startX][startY+1] == nullptr &&
+                        threadLocalBoard.board[startX][startY+2] == nullptr &&
+                        threadLocalBoard.isLegalMove(startX, startY, endX, startY + 1, true) &&
+                        threadLocalBoard.isLegalMove(startX, startY, endX, endY, true);
                 } else {
                     // queen side castle, need to check 3 squares
-                    result = board.isLegalMove(startX, startY, startX, startY, true) &&
-                        board.board[startX][startY-1] == nullptr &&
-                        board.board[startX][startY-2] == nullptr &&
-                        board.board[startX][startY-3] == nullptr &&
-                        board.isLegalMove(startX, startY, endX, startY - 2, true) &&
-                        board.isLegalMove(startX, startY, endX, startY - 1, true) &&
-                        board.isLegalMove(startX, startY, endX, endY, true);
+                    result = threadLocalBoard.isLegalMove(startX, startY, startX, startY, true) &&
+                        threadLocalBoard.board[startX][startY-1] == nullptr &&
+                        threadLocalBoard.board[startX][startY-2] == nullptr &&
+                        threadLocalBoard.board[startX][startY-3] == nullptr &&
+                        threadLocalBoard.isLegalMove(startX, startY, endX, startY - 2, true) &&
+                        threadLocalBoard.isLegalMove(startX, startY, endX, startY - 1, true) &&
+                        threadLocalBoard.isLegalMove(startX, startY, endX, endY, true);
                 }
                 if (result) {
-                    auto [rookX, rookY] = kingPiece->getRookPosition(endX, endY, board.board);
-                    Piece* rook = board.board[rookX][rookY];
+                    auto [rookX, rookY] = kingPiece->getRookPosition(endX, endY, threadLocalBoard.board);
+                    Piece* rook = threadLocalBoard.board[rookX][rookY];
 
                     // move rook temporarily
                     if (dy > 0) { // kingside
-                        board.board[rookX][rookY - 2] = rook;
-                        board.board[rookX][rookY] = nullptr;
+                        threadLocalBoard.board[rookX][rookY - 2] = rook;
+                        threadLocalBoard.board[rookX][rookY] = nullptr;
                     } else { // queenside
-                        board.board[rookX][rookY + 3] = rook;
-                        board.board[rookX][rookY] = nullptr;
+                        threadLocalBoard.board[rookX][rookY + 3] = rook;
+                        threadLocalBoard.board[rookX][rookY] = nullptr;
                     }
 
                     // move king temporarily
-                    board.board[endX][endY] = movingPiece;
-                    board.board[startX][startY] = nullptr;
+                    threadLocalBoard.board[endX][endY] = movingPiece;
+                    threadLocalBoard.board[startX][startY] = nullptr;
 
                     // update king's position
                     if (currentPlayer == 'W') {
-                        board.whiteKing = {endX, endY};
+                        threadLocalBoard.whiteKing = {endX, endY};
                     } else {
-                        board.blackKing = {endX, endY};
+                        threadLocalBoard.blackKing = {endX, endY};
                     }
 
                     // special move and unmove for castling
                     // call minimax or evaluate the position
-                    eval = evaluatePosition(depth, currentPlayer);
+                    eval = evaluatePosition(depth, currentPlayer, threadLocalBoard);
 
                     // undo king move
-                    board.board[startX][startY] = movingPiece;
-                    board.board[endX][endY] = nullptr;
+                    threadLocalBoard.board[startX][startY] = movingPiece;
+                    threadLocalBoard.board[endX][endY] = nullptr;
 
                     // undo rook move
                     if (dy > 0) { // kingside
-                        board.board[rookX][rookY] = rook;
-                        board.board[rookX][rookY - 2] = nullptr;
+                        threadLocalBoard.board[rookX][rookY] = rook;
+                        threadLocalBoard.board[rookX][rookY - 2] = nullptr;
                     } else { // queenside
-                        board.board[rookX][rookY] = rook;
-                        board.board[rookX][rookY + 3] = nullptr;
+                        threadLocalBoard.board[rookX][rookY] = rook;
+                        threadLocalBoard.board[rookX][rookY + 3] = nullptr;
                     }
 
                     // restore king's position
                     if (currentPlayer == 'W') {
-                        board.whiteKing = {startX, startY};
+                        threadLocalBoard.whiteKing = {startX, startY};
                     } else {
-                        board.blackKing = {startX, startY};
+                        threadLocalBoard.blackKing = {startX, startY};
                     }
 
                     return result;
@@ -246,40 +256,38 @@ bool Engine::moveAndUnmove(int startX, int startY, int endX, int endY, int &eval
             }
         }
     }
-
     // if enpassant
     if (movingPiece->getType() == "Pawn" &&
-        get<1>(board.previousMove) == get<3>(board.previousMove) &&
-        abs(get<2>(board.previousMove) - get<0>(board.previousMove)) == 2 &&
-        abs(startY - get<1>(board.previousMove)) == 1 &&
-        startX == get<2>(board.previousMove) &&
-        endX == get<2>(board.previousMove) + 
-            ((board.board[get<2>(board.previousMove)][get<3>(board.previousMove)]->getColor() == 'B') ? -1 : 1) &&
-        endY == get<3>(board.previousMove)) {
+        get<1>(threadLocalBoard.previousMove) == get<3>(threadLocalBoard.previousMove) &&
+        abs(get<2>(threadLocalBoard.previousMove) - get<0>(threadLocalBoard.previousMove)) == 2 &&
+        abs(startY - get<1>(threadLocalBoard.previousMove)) == 1 &&
+        startX == get<2>(threadLocalBoard.previousMove) &&
+        endX == get<2>(threadLocalBoard.previousMove) + 
+            ((threadLocalBoard.board[get<2>(threadLocalBoard.previousMove)][get<3>(threadLocalBoard.previousMove)]->getColor() == 'B') ? -1 : 1) &&
+        endY == get<3>(threadLocalBoard.previousMove)) {
         // previous pawn's end rank
-        int capturedPawnX = get<2>(board.previousMove); 
+        int capturedPawnX = get<2>(threadLocalBoard.previousMove); 
         // previous pawn's file/column
-        int capturedPawnY = get<3>(board.previousMove);
+        int capturedPawnY = get<3>(threadLocalBoard.previousMove);
 
         // temporarily remove the en passant captured pawn
-        enPassantCapturedPawn = board.board[capturedPawnX][capturedPawnY];
-        board.board[capturedPawnX][capturedPawnY] = nullptr;
+        enPassantCapturedPawn = threadLocalBoard.board[capturedPawnX][capturedPawnY];
+        threadLocalBoard.board[capturedPawnX][capturedPawnY] = nullptr;
 
         // move the current pawn to its destination
-        board.board[endX][endY] = movingPiece;
-        board.board[startX][startY] = nullptr;
+        threadLocalBoard.board[endX][endY] = movingPiece;
+        threadLocalBoard.board[startX][startY] = nullptr;
 
         // check if the king is in check after this move
-        char currentPlayer = movingPiece->getColor();
-        auto [kingX, kingY] = (currentPlayer == 'W') ? board.whiteKing : board.blackKing;
+        auto [kingX, kingY] = (currentPlayer == 'W') ? threadLocalBoard.whiteKing : threadLocalBoard.blackKing;
         bool isInCheck = false;
 
         // check if the current player's king is in check
         for (int i = 0; i < 8 && !isInCheck; i++) {
             for (int j = 0; j < 8 && !isInCheck; j++) {
-                if (board.board[i][j] && board.board[i][j]->getColor() != currentPlayer) {
+                if (threadLocalBoard.board[i][j] && threadLocalBoard.board[i][j]->getColor() != currentPlayer) {
                     // Check if the opponent piece can attack the king
-                    if (board.board[i][j]->isValidPieceMove(i, j, kingX, kingY, board.board, board.previousMove)) {
+                    if (threadLocalBoard.board[i][j]->isValidPieceMove(i, j, kingX, kingY, threadLocalBoard.board, threadLocalBoard.previousMove)) {
                         isInCheck = true;
                     }
                 }
@@ -288,56 +296,52 @@ bool Engine::moveAndUnmove(int startX, int startY, int endX, int endY, int &eval
 
         // special move and unmove for enpassant
         // if valid, call minimax for the next depth
-        eval = evaluatePosition(depth, currentPlayer);
+        eval = evaluatePosition(depth, currentPlayer, threadLocalBoard);
 
         // undo the en passant move and restore the state
-        board.board[startX][startY] = movingPiece;
-        board.board[endX][endY] = nullptr;
-        board.board[capturedPawnX][capturedPawnY] = enPassantCapturedPawn;
+        threadLocalBoard.board[startX][startY] = movingPiece;
+        threadLocalBoard.board[endX][endY] = nullptr;
+        threadLocalBoard.board[capturedPawnX][capturedPawnY] = enPassantCapturedPawn;
         return !isInCheck;
     }
-
     // make the move temporarily
-    board.board[endX][endY] = movingPiece;
-    board.board[startX][startY] = nullptr;
+    threadLocalBoard.board[endX][endY] = movingPiece;
+    threadLocalBoard.board[startX][startY] = nullptr;
 
     // update king position if the moved piece is a king
     if (movingPiece->getType() == "King") {
         if (currentPlayer == 'W') {
-            board.whiteKing = {endX, endY};
+            threadLocalBoard.whiteKing = {endX, endY};
         } else {
-            board.blackKing = {endX, endY};
+            threadLocalBoard.blackKing = {endX, endY};
         }
     }
-
     // check if the current player's king is in check
     bool isInCheck = false;
-    auto [kingX, kingY] = (currentPlayer == 'W') ? board.whiteKing : board.blackKing;
+    auto [kingX, kingY] = (currentPlayer == 'W') ? threadLocalBoard.whiteKing : threadLocalBoard.blackKing;
     for (int i = 0; i < 8 && !isInCheck; i++) {
         for (int j = 0; j < 8 && !isInCheck; j++) {
-            if (board.board[i][j] && board.board[i][j]->getColor() != currentPlayer) {
+            if (threadLocalBoard.board[i][j] && threadLocalBoard.board[i][j]->getColor() != currentPlayer) {
                 // check if the opponent piece can attack the king
-                if (board.board[i][j]->isValidPieceMove(i, j, kingX, kingY, board.board, board.previousMove)) {
+                if (threadLocalBoard.board[i][j]->isValidPieceMove(i, j, kingX, kingY, threadLocalBoard.board, threadLocalBoard.previousMove)) {
                     isInCheck = true;
                 }
             }
         }
     }
-    
     // normal move and unmove
     // if valid, call minimax for the next depth
-    eval = evaluatePosition(depth, currentPlayer);
+    eval = evaluatePosition(depth, currentPlayer, threadLocalBoard);
     
     // undo the move to restore the original board state
-    board.board[startX][startY] = movingPiece;
-    board.board[endX][endY] = capturedPiece;
-
+    threadLocalBoard.board[startX][startY] = movingPiece;
+    threadLocalBoard.board[endX][endY] = capturedPiece;
     // restore king's position if it was moved
     if (movingPiece->getType() == "King") {
         if (currentPlayer == 'W') {
-            board.whiteKing = {startX, startY};
+            threadLocalBoard.whiteKing = {startX, startY};
         } else {
-            board.blackKing = {startX, startY};
+            threadLocalBoard.blackKing = {startX, startY};
         }
     }
     return !isInCheck;

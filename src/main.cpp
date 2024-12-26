@@ -133,7 +133,14 @@ int main() {
                 }
             } else {
                 // Computer's turn
+                auto timestart = std::chrono::high_resolution_clock::now();
+
                 auto [start, end] = engine.getBestMove(currentPlayer);
+
+                auto timeend = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> elapsed = timeend - timestart;
+                std::cout<< "Spent " << elapsed.count() << "s" << std::endl;
+
                 std::tie(px, py) = start;
                 std::tie(px1, py1) = end;
                 if (start.first == -1) {
@@ -153,8 +160,6 @@ int main() {
         sf::Color brown(181, 136, 99);
         sf::Color highlight(50, 205, 50, 128); // semi-transparent green
         sf::Color previousMove(238, 75, 43, 128); // red
-
-
 
         // Render board
         for (int i = 0; i < 8; i++) {

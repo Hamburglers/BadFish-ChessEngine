@@ -16,10 +16,10 @@ private:
 public:
     Engine(Board& board);
     std::pair<std::pair<int, int>, std::pair<int, int>> getBestMove(char currentPlayer);
-    int evaluate() const;
-    bool moveAndUnmove(int startX, int startY, int endX, int endY, int &eval, int depth, char currentPlayer, bool flag=false);
-    int evaluatePosition(int depth, char currentPlayer);
-    int minimax(int depth, char currentPlayer, int alpha, int beta);
+    int evaluate(Board& threadLocalBoard) const;
+    bool moveAndUnmove(int startX, int startY, int endX, int endY, int &eval, int depth, char currentPlayer, Board& threadLocalBoard, bool flag=false);
+    int evaluatePosition(int depth, char currentPlayer, Board& threadLocalBoard);
+    int minimax(int depth, char currentPlayer, int alpha, int beta, Board& threadLocalBoard);
 };
 
 #endif
