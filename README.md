@@ -49,4 +49,4 @@ make
 ```
 ## Notes
 - On checkmate/stalemate, the board will freeze (intended), CTRL+C in the terminal to quit.
-- Depth of 3 is preselected in `Engine.cpp` which takes about 1 second per move. Any higher will take longer > 10second.
+- Depth of 3 is preselected in `Engine.cpp` which takes about 1 second per move. Any higher will take longer than 10 seconds.
