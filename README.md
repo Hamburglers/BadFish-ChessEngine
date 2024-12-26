@@ -4,7 +4,7 @@ A really bad version of StockFish in C++17 that can beat Martin bot on chess.com
 
 ---
 ## Image Gallery
-| ![Opening 1](./gallery/opening.png) | ![Opening 2](./gallery/opening.png) |
+| ![Opening 1](./gallery/opening.png) | ![Opening 2](./gallery/middlegame.png) |
 |-------------------------------------|-------------------------------------|
 | Opening                             | Middlegame                          |
 - **Red moves**: Highlight the previous move.
@@ -38,12 +38,14 @@ Cmake is used to manage the building of this project and SFML is used for the GU
 ### To use Player vs Player
 ```bash
 cmake -DCOMPUTER_MODE=OFF ..
-make; ./ChessGame
+make
+./ChessGame
 ```
 ### To use Player vs Computer
 ```bash
 cmake -DCOMPUTER_MODE=ON ..
-make; ./ChessGame
+make
+./ChessGame
 ```
 ## Notes
 - On checkmate/stalemate, the board will freeze (intended), CTRL+C in the terminal to quit.
