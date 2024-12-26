@@ -133,13 +133,13 @@ int main() {
                 }
             } else {
                 // Computer's turn
-                auto timestart = std::chrono::high_resolution_clock::now();
+                // auto timestart = std::chrono::high_resolution_clock::now();
 
                 auto [start, end] = engine.getBestMove(currentPlayer);
 
-                auto timeend = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double> elapsed = timeend - timestart;
-                std::cout<< "Spent " << elapsed.count() << "s" << std::endl;
+                // auto timeend = std::chrono::high_resolution_clock::now();
+                // std::chrono::duration<double> elapsed = timeend - timestart;
+                // std::cout<< "Spent " << elapsed.count() << "s" << std::endl;
 
                 std::tie(px, py) = start;
                 std::tie(px1, py1) = end;

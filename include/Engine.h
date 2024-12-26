@@ -10,7 +10,8 @@ private:
                                                     {"Knight", 300}, 
                                                     {"Bishop", 300},
                                                     {"Rook", 500},
-                                                    {"Queen", 900}};
+                                                    {"Queen", 900},
+                                                    {"King", 20000}};
     char color;
     Board& board;
 public:

@@ -1,12 +1,14 @@
 #include <utility>
-#include "Engine.h"
-#include "Piece.h"
-#include "King.h"
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include "Engine.h"
+#include "Piece.h"
+#include "King.h"
+#include "PieceValue.h"
 
 #define DEPTH 4
+#define ENDGAME_THRESHOLD 14
 
 Engine::Engine(Board& board) : board(board) {}
 
@@ -32,6 +34,7 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char cur
             }
         }
     }
+
     // evaluate a subset of moves
     auto evaluateMoves = [&](const std::vector<std::tuple<int, int, std::pair<int, int>>>& movesSubset, Board threadLocalBoard) {
         int localBestValue = bestValue;
@@ -89,18 +92,78 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char cur
 int Engine::evaluate(Board& threadLocalBoard) const {
     int whiteEval{};
     int blackEval{};
+    int nonPawnMaterial{};
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             if (threadLocalBoard.board[i][j]) {
                 Piece* piece = threadLocalBoard.board[i][j];
-                if (piece->getType() == "King") {
-                    continue;
+
+                // check if king under attack
+                // if (piece->getType() == "King") {
+                //     if (piece->getColor() == 'W') {
+                //         auto [kingX, kingY] = threadLocalBoard.whiteKing;
+                //         auto legalMoves = threadLocalBoard.getLegalMoves(i, j, 'W');
+                //         if (!legalMoves.empty()) {
+                //             if (piece->isValidPieceMove(i, j, kingX, kingY, threadLocalBoard.board, threadLocalBoard.previousMove)) {
+                //                 return std::numeric_limits<int>::max(); 
+                //             }
+                //         }
+                //     } else {
+                //         auto [kingX, kingY] = threadLocalBoard.blackKing;
+                //         auto legalMoves = threadLocalBoard.getLegalMoves(i, j, 'B');
+                //         if (!legalMoves.empty()) {
+                //            if (piece->isValidPieceMove(i, j, kingX, kingY, threadLocalBoard.board, threadLocalBoard.previousMove)) {
+                //                 return std::numeric_limits<int>::min(); 
+                //             } 
+                //         }
+                //     }
+                // }
+
+                int row = (piece->getColor() == 'W') ? i : 7 - i;
+                int col = j;
+
+                int pieceValue = pieceValues.find(piece->getType())->second;
+
+                // add positional value from piece-square table
+                if (piece->getType() == "Pawn") {
+                    pieceValue += pawnTable[row][col];
+
+                    // White pawn on 7th rank
+                    if (piece->getColor() == 'W' && row == 6) {
+                        // add queen bonus
+                        pieceValue += 900; 
+                    // Black pawn on 2nd rank
+                    } else if (piece->getColor() == 'B' && row == 1) {
+                        // add queen bonus
+                        pieceValue += 900; 
+                    }
+                } else if (piece->getType() == "Knight") {
+                    pieceValue += knightTable[row][col];
+                } else if (piece->getType() == "Bishop") {
+                    pieceValue += bishopTable[row][col];
+                } else if (piece->getType() == "Rook") {
+                    pieceValue += rookTable[row][col];
+                } else if (piece->getType() == "Queen") {
+                    pieceValue += queenTable[row][col];
+                } else if (piece->getType() == "King") {
+                    if (nonPawnMaterial <= ENDGAME_THRESHOLD) {
+                        pieceValue += kingEndGameTable[row][col];
+                    } else {
+                        pieceValue += kingMiddleGameTable[row][col];
+                    }
                 }
+
                 if (piece->getColor() == 'W') {
-                    whiteEval += pieceValues.find(piece->getType())->second;
+                    whiteEval += pieceValue;
                 } else {
-                    blackEval += pieceValues.find(piece->getType())->second;
+                    blackEval += pieceValue;
                 }
+
+                // track non-pawn material for endgame determination
+                if (piece->getType() != "Pawn") {
+                    nonPawnMaterial += pieceValues.find(piece->getType())->second;
+                }
+
             }
         }
     }
