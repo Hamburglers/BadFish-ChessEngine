@@ -24,9 +24,9 @@ Board::~Board() {
     }
 }
 
-// Copy constructor
+// copy constructor
 Board::Board(const Board& other) {
-    // Deep copy of board
+    // deep copy of board
     board.resize(8, vector<Piece*>(8, nullptr));
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
@@ -36,7 +36,7 @@ Board::Board(const Board& other) {
         }
     }
 
-    // Copy other members
+    // copy other members
     isBlackInCheck = other.isBlackInCheck;
     isWhiteInCheck = other.isWhiteInCheck;
     currentPlayer = other.currentPlayer;
@@ -47,17 +47,18 @@ Board::Board(const Board& other) {
     blackKing = other.blackKing;
 }
 
-// Copy assignment operator
+// copy assignment operator
 Board& Board::operator=(const Board& other) {
     if (this != &other) {
-        // Free existing resources
+        // free existing resources
         for (auto& row : board) {
             for (auto& piece : row) {
-                delete piece; // Clean up existing pointers
+                // clean up existing pointers
+                delete piece;
             }
         }
 
-        // Resize and deep copy board
+        // resize and deep copy board
         board.resize(8, vector<Piece*>(8, nullptr));
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
@@ -67,7 +68,7 @@ Board& Board::operator=(const Board& other) {
             }
         }
 
-        // Copy other members
+        // copy other members
         isBlackInCheck = other.isBlackInCheck;
         isWhiteInCheck = other.isWhiteInCheck;
         currentPlayer = other.currentPlayer;
@@ -80,6 +81,7 @@ Board& Board::operator=(const Board& other) {
     return *this;
 }
 
+// deprecated, use loadFromFEN instead
 void Board::initialise() {
     // pawns
     for (int i = 0; i < 8; ++i) {
@@ -137,7 +139,8 @@ void Board::loadFromFEN(string fen) {
         } else {
             // place a piece
             char color = isupper(ch) ? 'W' : 'B';
-            ch = tolower(ch); // Normalize to lowercase for type checking
+            // normalize to lowercase for type checking
+            ch = tolower(ch);
             switch (ch) {
                 case 'p': board[row][col] = new Pawn(color); break;
                 case 'r': board[row][col] = new Rook(color); break;
@@ -214,7 +217,7 @@ tuple<int, int> Board::getBlackKing() {
 }
 
 bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
-    // Backup the current state
+    // backup the current state
     Piece* movingPiece = board[startX][startY];
     Piece* capturedPiece = board[endX][endY];
     Piece* enPassantCapturedPawn = nullptr;
@@ -276,11 +279,11 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
         auto [kingX, kingY] = (currentPlayer == 'W') ? whiteKing : blackKing;
         bool isInCheck = false;
 
-        // Check if the current player's king is in check
+        // check if the current player's king is in check
         for (int i = 0; i < 8 && !isInCheck; i++) {
             for (int j = 0; j < 8 && !isInCheck; j++) {
                 if (board[i][j] && board[i][j]->getColor() != currentPlayer) {
-                    // Check if the opponent piece can attack the king
+                    // check if the opponent piece can attack the king
                     if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board, previousMove)) {
                         isInCheck = true;
                     }
@@ -295,12 +298,12 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
         return !isInCheck;
     }
 
-    // Make the move temporarily
+    // make the move temporarily
     char currentPlayer = board[startX][startY]->getColor();
     board[endX][endY] = movingPiece;
     board[startX][startY] = nullptr;
 
-    // Update king position if the moved piece is a king
+    // update king position if the moved piece is a king
     if (movingPiece->getType() == "King") {
         if (currentPlayer == 'W') {
             whiteKing = {endX, endY};
@@ -309,24 +312,24 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
         }
     }
 
-    // Check if the current player's king is in check
+    // check if the current player's king is in check
     bool isInCheck = false;
     auto [kingX, kingY] = (currentPlayer == 'W') ? whiteKing : blackKing;
     for (int i = 0; i < 8 && !isInCheck; i++) {
         for (int j = 0; j < 8 && !isInCheck; j++) {
             if (board[i][j] && board[i][j]->getColor() != currentPlayer) {
-                // Check if the opponent piece can attack the king
+                // check if the opponent piece can attack the king
                 if (board[i][j]->isValidPieceMove(i, j, kingX, kingY, board, previousMove)) {
                     isInCheck = true;
                 }
             }
         }
     }
-    // Undo the move to restore the original board state
+    // undo the move to restore the original board state
     board[startX][startY] = movingPiece;
     board[endX][endY] = capturedPiece;
 
-    // Restore king's position if it was moved
+    // restore king's position if it was moved
     if (movingPiece->getType() == "King") {
         if (currentPlayer == 'W') {
             whiteKing = {startX, startY};
@@ -339,11 +342,11 @@ bool Board::isLegalMove(int startX, int startY, int endX, int endY, bool flag) {
 
 
 bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPlayer) {
-    // if (board[startX][startY]) { // Check if the pointer is not null
+    // if (board[startX][startY]) {
     //     std::cout << "Start position: " << typeid(*board[startX][startY]).name() << std::endl;
     //     std::cout << board[startX][startY]->getType() << std::endl;
     // }
-    // if (board[endX][endY]) { // Check if the pointer is not null
+    // if (board[endX][endY]) {
     //     std::cout << "End position: " << typeid(*board[endX][endY]).name() << std::endl;
     //     std::cout << board[endX][endY]->getType() << std::endl;
     // }
@@ -422,8 +425,10 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         endX == get<2>(previousMove) + 
             ((board[get<2>(previousMove)][get<3>(previousMove)]->getColor() == 'B') ? -1 : 1) &&
         endY == get<3>(previousMove)) {
-        int capturedPawnX = get<2>(previousMove); // Previous pawn's end rank
-        int capturedPawnY = get<3>(previousMove); // Previous pawn's file/column
+        // previous pawn's end rank
+        int capturedPawnX = get<2>(previousMove);
+        // previous pawn's file/column 
+        int capturedPawnY = get<3>(previousMove);
 
         // delete the en passant captured pawn
         delete board[capturedPawnX][capturedPawnY];
@@ -438,16 +443,17 @@ bool Board::movePiece(int startX, int startY, int endX, int endY, char currentPl
         board[endX][endY]->makeMove();
         board[startX][startY] = nullptr;
     }
-    // if (board[startX][startY]) { // Check if the pointer is not null
+    // if (board[startX][startY]) {
     //     std::cout << "Start position: " << typeid(*board[startX][startY]).name() << std::endl;
     //     std::cout << board[startX][startY]->getType() << std::endl;
     // }
-    // if (board[endX][endY]) { // Check if the pointer is not null
+    // if (board[endX][endY]) {
     //     std::cout << "End position: " << typeid(*board[endX][endY]).name() << std::endl;
     //     std::cout << board[endX][endY]->getType() << std::endl;
     // }
     previousMove = {startX, startY, endX, endY};
-    //display();
+    // show a ascii version of the board on the terminal
+    display();
     return true;
 }
 
@@ -474,7 +480,7 @@ std::vector<std::pair<int, int>> Board::getLegalMoves(int startX, int startY, ch
                 continue;
             }
             if (board[startX][startY]->isValidPieceMove(startX, startY, i, j, board, previousMove) && isLegalMove(startX, startY, i, j)) {
-                // Check legality and revert the move
+                // check legality and revert the move
                 // std::cout << startX << " " << startY << "->" << i << " " << j << std::endl;
                 legalMoves.emplace_back(i, j);
             }

@@ -87,7 +87,6 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char cur
     for (auto& thread : threads) {
         thread.join();
     }
-    std::cout<<bestValue<<std::endl;
     return bestMove;
 }
 
@@ -151,10 +150,10 @@ int Engine::evaluate(Board& threadLocalBoard) const {
                 if (piece->getType() == "Pawn") {
                     pieceValue += pawnTable[row][col];
 
-                    // White pawn on 7th rank
+                    // white pawn on 7th rank
                     if (piece->getColor() == 'W') {
                         pieceValue += 500 * (row - 6) / 6;
-                    // Black pawn on 2nd rank
+                    // black pawn on 2nd rank
                     } else if (piece->getColor() == 'B') {
                         pieceValue += 500 * (6 - row) / 6;
                     }
@@ -177,7 +176,7 @@ int Engine::evaluate(Board& threadLocalBoard) const {
                 // penalty for being on attacked squares
                 auto& opponentAttackedSquares = (piece->getColor() == 'W') ? blackAttackedSquares : whiteAttackedSquares;
                 if (opponentAttackedSquares.find({i, j}) != opponentAttackedSquares.end()) {
-                    // Penalty based on piece value
+                    // penalty based on piece value
                     pieceValue -= pieceValues.find(piece->getType())->second / 2;
                 }
 
@@ -244,7 +243,7 @@ int Engine::minimax(int depth, char currentPlayer, int alpha, int beta, Board& t
                         if (moveAndUnmove(startX, startY, move.first, move.second, eval, depth, currentPlayer, threadLocalBoard)) {
                             maxEval = std::max(maxEval, eval);
                             alpha = std::max(alpha, maxEval);
-                            // Alpha-beta pruning
+                            // alpha-beta pruning
                             if (beta <= alpha) {
                                 return maxEval;
                             }
@@ -261,14 +260,14 @@ int Engine::minimax(int depth, char currentPlayer, int alpha, int beta, Board& t
             for (int startY = 0; startY < 8; startY++) {
                 Piece* piece = threadLocalBoard.board[startX][startY];
                 if (piece && piece->getColor() == 'B') {
-                    // Get legal moves for the piece
+                    // get legal moves for the piece
                     std::vector<std::pair<int, int>> legalMoves = threadLocalBoard.getLegalMoves(startX, startY, 'B');
                     for (const auto& move : legalMoves) {
                         int eval;
                         if (moveAndUnmove(startX, startY, move.first, move.second, eval, depth, currentPlayer, threadLocalBoard)) {
                             minEval = std::min(minEval, eval);
                             beta = std::min(beta, minEval);
-                            // Alpha-beta pruning
+                            // alpha-beta pruning
                             if (beta <= alpha) {
                                 return minEval;
                             }

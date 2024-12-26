@@ -7,7 +7,8 @@ using namespace std;
 
 class Piece {
 protected:
-    char color; // 'W' for white, 'B' for black
+    // 'W' for white, 'B' for black
+    char color;
 
 public:
     Piece(char color) : color(color) {};

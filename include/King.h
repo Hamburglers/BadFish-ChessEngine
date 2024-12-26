@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <functional>
 
-// Custom hash for std::pair<int, int>
+// custom hash for std::pair<int, int>
 struct PairHash {
     template <typename T, typename U>
     std::size_t operator()(const std::pair<T, U>& pair) const {

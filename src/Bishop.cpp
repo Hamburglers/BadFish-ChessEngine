@@ -1,9 +1,6 @@
 #include "Bishop.h"
 
-
 Bishop::Bishop(char color) : Piece(color) {}
-
-
 
 string Bishop::getType() const { return "Bishop"; }
 

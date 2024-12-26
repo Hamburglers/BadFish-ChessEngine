@@ -10,7 +10,12 @@ int main() {
     Board board;
     Engine engine(board, 'B');
     // board.initialise();
+    // standard
     board.loadFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    // Kiwipete
+    // board.loadFromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+    // random middle game
+    // board.loadFromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
 
     // 1st run
     // Perft Test - Depth: 0 - Nodes: 1 - Captures: 0 - Time: 8.4e-08 seconds
@@ -72,14 +77,14 @@ int main() {
 
             #ifndef COMPUTER_MODE
 
-            // Player vs Player Mode (testing for me basically)
+            // player vs player Mode (testing for me basically)
             if (event.type == sf::Event::MouseButtonPressed) {
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     int x = event.mouseButton.x / squareSize;
                     int y = event.mouseButton.y / squareSize;
 
                     if (selectedX == -1 && selectedY == -1) {
-                        // Selecting a piece
+                        // selecting a piece
                         selectedPiece = board.getPieceAt(y, x);
                         if (selectedPiece && board.getPieceColor(y, x) == currentPlayer) {
                             selectedX = x;
@@ -87,7 +92,7 @@ int main() {
                             legalMoves = board.getLegalMoves(y, x, currentPlayer);
                         }
                     } else {
-                        // Moving a piece
+                        // moving a piece
                         auto moveIt = std::find(legalMoves.begin(), legalMoves.end(), std::make_pair(y, x));
                         if (moveIt != legalMoves.end()) {
                             if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
@@ -103,7 +108,7 @@ int main() {
             }
 
             #else
-            // Player vs Computer Mode
+            // player vs computer Mode
             if (currentPlayer == 'W') {
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
@@ -111,7 +116,7 @@ int main() {
                         int y = event.mouseButton.y / squareSize;
 
                         if (selectedX == -1 && selectedY == -1) {
-                            // Selecting a piece
+                            // selecting a piece
                             selectedPiece = board.getPieceAt(y, x);
                             if (selectedPiece && board.getPieceColor(y, x) == currentPlayer) {
                                 selectedX = x;
@@ -119,7 +124,7 @@ int main() {
                                 legalMoves = board.getLegalMoves(y, x, currentPlayer);
                             }
                         } else {
-                            // Moving a piece
+                            // moving a piece
                             auto moveIt = std::find(legalMoves.begin(), legalMoves.end(), std::make_pair(y, x));
                             if (moveIt != legalMoves.end()) {
                                 if (board.movePiece(selectedY, selectedX, y, x, currentPlayer)) {
@@ -132,7 +137,9 @@ int main() {
                     }
                 }
             } else {
-                // Computer's turn
+                // computer's turn
+
+                // uncomment to see time per move
                 // auto timestart = std::chrono::high_resolution_clock::now();
 
                 auto [start, end] = engine.getBestMove(currentPlayer);
@@ -158,10 +165,12 @@ int main() {
         window.clear();
         sf::Color cream(240, 217, 181);
         sf::Color brown(181, 136, 99);
-        sf::Color highlight(50, 205, 50, 128); // semi-transparent green
-        sf::Color previousMove(238, 75, 43, 128); // red
+        // semi-transparent green
+        sf::Color highlight(50, 205, 50, 128); 
+        // red
+        sf::Color previousMove(238, 75, 43, 128); 
 
-        // Render board
+        // render board
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 sf::RectangleShape square(sf::Vector2f(squareSize, squareSize));
@@ -183,18 +192,18 @@ int main() {
         if (px != -1 && py != -1 && px1 != -1 && py1 != -1) {
             sf::RectangleShape highlightSquare1(sf::Vector2f(squareSize, squareSize));
             
-            // Highlight the starting square of the previous move
+            // highlight the starting square of the previous move
             highlightSquare1.setPosition(py * squareSize, px * squareSize);
             highlightSquare1.setFillColor(previousMove);
             window.draw(highlightSquare1);
             
-            // Highlight the ending square of the previous move
+            // highlight the ending square of the previous move
             highlightSquare1.setPosition(py1 * squareSize, px1 * squareSize);
             highlightSquare1.setFillColor(previousMove);
             window.draw(highlightSquare1);
         }
 
-        // Highlight legal moves
+        // highlight legal moves
         for (auto& move : legalMoves) {
             sf::RectangleShape highlightSquare(sf::Vector2f(squareSize, squareSize));
             highlightSquare.setPosition(move.second * squareSize, move.first * squareSize);

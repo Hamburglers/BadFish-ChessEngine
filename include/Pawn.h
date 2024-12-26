@@ -3,9 +3,6 @@
 
 #include "Piece.h"
 
-// forward declare to use static previousmove attribute
-class Board;
-
 class Pawn : public Piece {
 private:
     bool hasMoved = false;
