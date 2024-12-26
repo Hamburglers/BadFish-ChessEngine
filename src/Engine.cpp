@@ -2,15 +2,16 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <unordered_set>
 #include "Engine.h"
 #include "Piece.h"
 #include "King.h"
 #include "PieceValue.h"
 
-#define DEPTH 4
+#define DEPTH 3
 #define ENDGAME_THRESHOLD 14
 
-Engine::Engine(Board& board) : board(board) {}
+Engine::Engine(Board& board, char color) : board(board), color(color) {}
 
 // finds the best move
 std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char currentPlayer) {
@@ -86,6 +87,7 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Engine::getBestMove(char cur
     for (auto& thread : threads) {
         thread.join();
     }
+    std::cout<<bestValue<<std::endl;
     return bestMove;
 }
 
@@ -93,6 +95,27 @@ int Engine::evaluate(Board& threadLocalBoard) const {
     int whiteEval{};
     int blackEval{};
     int nonPawnMaterial{};
+    std::unordered_set<std::pair<int, int>, PairHash> whiteAttackedSquares;
+    std::unordered_set<std::pair<int, int>, PairHash> blackAttackedSquares;
+    
+    // find attacked squares
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Piece* piece = threadLocalBoard.board[i][j];
+            if (piece) {
+                char pieceColor = piece->getColor();
+                auto legalMoves = threadLocalBoard.getLegalMoves(i, j, pieceColor);
+                for (const auto& move : legalMoves) {
+                    if (pieceColor == 'W') {
+                        whiteAttackedSquares.insert(move);
+                    } else {
+                        blackAttackedSquares.insert(move);
+                    }
+                }
+            }
+        }
+    }
+
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             if (threadLocalBoard.board[i][j]) {
@@ -121,7 +144,7 @@ int Engine::evaluate(Board& threadLocalBoard) const {
 
                 int row = (piece->getColor() == 'W') ? i : 7 - i;
                 int col = j;
-
+                
                 int pieceValue = pieceValues.find(piece->getType())->second;
 
                 // add positional value from piece-square table
@@ -129,13 +152,11 @@ int Engine::evaluate(Board& threadLocalBoard) const {
                     pieceValue += pawnTable[row][col];
 
                     // White pawn on 7th rank
-                    if (piece->getColor() == 'W' && row == 6) {
-                        // add queen bonus
-                        pieceValue += 900; 
+                    if (piece->getColor() == 'W') {
+                        pieceValue += 500 * (row - 6) / 6;
                     // Black pawn on 2nd rank
-                    } else if (piece->getColor() == 'B' && row == 1) {
-                        // add queen bonus
-                        pieceValue += 900; 
+                    } else if (piece->getColor() == 'B') {
+                        pieceValue += 500 * (6 - row) / 6;
                     }
                 } else if (piece->getType() == "Knight") {
                     pieceValue += knightTable[row][col];
@@ -153,9 +174,36 @@ int Engine::evaluate(Board& threadLocalBoard) const {
                     }
                 }
 
+                // penalty for being on attacked squares
+                auto& opponentAttackedSquares = (piece->getColor() == 'W') ? blackAttackedSquares : whiteAttackedSquares;
+                if (opponentAttackedSquares.find({i, j}) != opponentAttackedSquares.end()) {
+                    // Penalty based on piece value
+                    pieceValue -= pieceValues.find(piece->getType())->second / 2;
+                }
+
+                // bonus for capturing opponent pieces
+                auto legalMoves = threadLocalBoard.getLegalMoves(i, j, piece->getColor());
+                for (const auto& move : legalMoves) {
+                    int targetX = move.first;
+                    int targetY = move.second;
+                    Piece* target = threadLocalBoard.board[targetX][targetY];
+                    if (target && target->getColor() != piece->getColor()) {
+                        int attackerValue = pieceValues.find(piece->getType())->second;
+                        int targetValue = pieceValues.find(target->getType())->second;
+
+                        // bonus for favourable captures
+                        if (targetValue >= attackerValue) {
+                            // Larger bonus for more favourable trades
+                            pieceValue += targetValue - attackerValue;
+                        }
+                    }
+                }
+
                 if (piece->getColor() == 'W') {
+                    // std::cout<<"whiteEval += " << pieceValue << std::endl;
                     whiteEval += pieceValue;
                 } else {
+                    // std::cout<<"blackEval += " << pieceValue << std::endl;
                     blackEval += pieceValue;
                 }
 

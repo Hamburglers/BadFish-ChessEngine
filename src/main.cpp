@@ -8,7 +8,7 @@
 
 int main() {
     Board board;
-    Engine engine(board);
+    Engine engine(board, 'B');
     // board.initialise();
     board.loadFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 

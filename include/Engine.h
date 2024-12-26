@@ -11,11 +11,11 @@ private:
                                                     {"Bishop", 300},
                                                     {"Rook", 500},
                                                     {"Queen", 900},
-                                                    {"King", 20000}};
+                                                    {"King", 0}};
     char color;
     Board& board;
 public:
-    Engine(Board& board);
+    Engine(Board& board, char color);
     std::pair<std::pair<int, int>, std::pair<int, int>> getBestMove(char currentPlayer);
     int evaluate(Board& threadLocalBoard) const;
     bool moveAndUnmove(int startX, int startY, int endX, int endY, int &eval, int depth, char currentPlayer, Board& threadLocalBoard, bool flag=false);
