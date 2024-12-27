@@ -39,7 +39,7 @@ int main() {
 
     sf::RenderWindow window(sf::VideoMode(1000, 1000), "Chess");
     sf::Texture piecesTexture;
-    if (!piecesTexture.loadFromFile("Chess_Pieces_Sprite.svg.png")) {
+    if (!piecesTexture.loadFromFile("../gallery/Chess_Pieces_Sprite.svg.png")) {
         std::cerr << "Error loading Chess_Pieces_Sprite.svg.png" << std::endl;
         return 1;
     }

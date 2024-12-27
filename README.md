@@ -1,6 +1,6 @@
 # BadFish ChessEngine
 
-A really bad version of StockFish in C++17 that can beat Martin bot on chess.com
+A really bad version of StockFish in C++17 that can beat beginner level bots on chess.com
 
 ---
 ## Image Gallery
